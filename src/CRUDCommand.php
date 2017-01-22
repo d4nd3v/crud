@@ -505,6 +505,14 @@ class CRUDCommand extends Command
     public function createRoutes($tableName, $childOf)
     {
 
+        $routes = "";
+
+
+        $routePath = base_path('routes/web.php');
+        \File::append($routePath, PHP_EOL.PHP_EOL.$routes.PHP_EOL.PHP_EOL);
+
+
+
         $tableIsChild = !empty($childOf);
 
         $routePath = base_path('routes/web.php');
@@ -516,7 +524,15 @@ class CRUDCommand extends Command
             if($tableIsChild) {
                 $newRoutePath = $childOf . '/{parentId}/'.$newRoutePath;
             }
-            $routeText = "Route::resource('" . $newRoutePath . "', '" . $this->getControllerName($tableName) . "', array('only' => array('index', 'create', 'store', 'edit', 'show', 'update', 'destroy')));";
+            $routeText = "// Route::resource('" . $newRoutePath . "', '" . $this->getControllerName($tableName) . "', array('only' => array('index', 'create', 'store', 'edit', 'show', 'update', 'destroy')));";
+            $routeText .= PHP_EOL."Route::get('/".$tableName."', '".$this->getControllerName($tableName)."@index')->name('".$tableName.".index');";
+            $routeText .= PHP_EOL."Route::get('/".$tableName."/create', '".$this->getControllerName($tableName)."@create')->name('".$tableName.".create');";
+            $routeText .= PHP_EOL."Route::post('/".$tableName."', '".$this->getControllerName($tableName)."@store')->name('".$tableName.".store');";
+            $routeText .= PHP_EOL."Route::get('/".$tableName."/{id}/edit', '".$this->getControllerName($tableName)."@edit')->name('".$tableName.".edit');";
+            $routeText .= PHP_EOL."Route::get('/".$tableName."/{id}', '".$this->getControllerName($tableName)."@show')->name('".$tableName.".show');";
+            $routeText .= PHP_EOL."Route::put('/".$tableName."/{id}', '".$this->getControllerName($tableName)."@update')->name('".$tableName.".update');";
+            $routeText .= PHP_EOL."Route::delete('/".$tableName."/{id}', '".$this->getControllerName($tableName)."@destroy')->name('".$tableName.".destroy');";
+
             $routeCollection = \Route::getRoutes();
             $routeAlreadyExists = false;
             foreach ($routeCollection as $r) {
@@ -537,6 +553,10 @@ class CRUDCommand extends Command
                 \File::append($routePath, PHP_EOL.PHP_EOL.$routeText.PHP_EOL.PHP_EOL);
             }
         }
+
+
+
+
     }
 
 
