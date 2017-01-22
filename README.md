@@ -1,4 +1,4 @@
-# Laravel 5 CRUD Resource Generator
+# Laravel 5 CRUD Generator
 
 ## Usage
 

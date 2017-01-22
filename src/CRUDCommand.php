@@ -73,7 +73,7 @@ class CRUDCommand extends Command
         // create view folder
         $viewsPath = resource_path('views') .'/'. $this->getViewFolder($tableName);
         if(!\File::exists($viewsPath)) {
-            \File::makeDirectory($viewsPath, 0775, true);
+            \File::makeDirectory($viewsPath, 0755, true);
         }
         $this->createCreateView($viewsPath, $tableName, $dbFields, $tableIsChild, $parentOf);
         $this->createEditView($viewsPath, $tableName, $dbFields, $tableIsChild, $parentOf);
@@ -425,8 +425,12 @@ class CRUDCommand extends Command
         $pk = $this->getPrimaryKey($dbFields);
 
         $f = "";
+        $counter = 0;
         foreach ($dbFields as $c) {
+            $counter++;
             $fieldName = $c->Field;
+
+            $formatedColumnName = $this->formatColumnName($c->Field);
 
             $typeParts = explode('(', $c->Type);
             $size = 0;
@@ -444,11 +448,17 @@ class CRUDCommand extends Command
                 $f .= str_repeat(" ", 3*4).'<tr>'.PHP_EOL;
                 // TD name
                 $f .= str_repeat(" ", 4*4) . '<td>' . PHP_EOL;
-                $f .= str_repeat(" ", 5*4) . $this->formatColumnName($c->Field) . PHP_EOL;
+                $f .= str_repeat(" ", 5*4) . $formatedColumnName . PHP_EOL;
+
+
+
                 $f .= str_repeat(" ", 4*4) . '</td>' . PHP_EOL;
 
                 // TD input
                 $f .= str_repeat(" ", 4*4).'<td>'.PHP_EOL;
+
+
+
                 if($editForm) {
                     $value = '{{ old(\''.$fieldName.'\')?old(\''.$fieldName.'\'):$item->'.$fieldName.' }}';
                 } else {
@@ -477,6 +487,8 @@ class CRUDCommand extends Command
                 } else if($this->columnIsBool($c)) {
                     $formElement = '<input type="hidden" value="0" name="' . $fieldName . '">';
                     $formElement .= PHP_EOL . str_repeat(" ", 6*4) . '<input type="checkbox" class="form-control input-sm" '.$htmlChecked.' name="' . $fieldName . '" value="1">';
+//                    $formElement .= ' '.$formatedColumnName.'</label>';
+
                 } else {
                     $formElement = '<input style="width: '.$inputSize.'px" class="form-control input-sm" name="' . $fieldName . '" value="' . $value . '">';
                 }
@@ -489,6 +501,10 @@ class CRUDCommand extends Command
 
 
                 $f .= str_repeat(" ", 4*4) . '</td>'.PHP_EOL;
+
+
+
+
 
                 $f .= str_repeat(" ", 3*4) . '</tr>'.PHP_EOL;
             }
@@ -822,7 +838,7 @@ class CRUDCommand extends Command
         // region  write generated model to disk
         $modelsPath = app_path('Models');
         if(!\File::exists($modelsPath)) {
-            \File::makeDirectory($modelsPath, 0775, true);
+            \File::makeDirectory($modelsPath, 0755, true);
         }
         $modelPath = $modelsPath .'/'. $modelName.".php";
         if(\File::exists($modelPath) && !$this->overwriteExistingFiles) {
