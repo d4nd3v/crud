@@ -128,7 +128,7 @@ class CRUDCommand extends Command
             $parentOfArray = explode(',', $parentOf);
             foreach ($parentOfArray as $pof) {
                 $childLinkHeader .= PHP_EOL . '<th>&nbsp;</th>';
-                $childLink .= PHP_EOL . '<td><a href="/tests/{{ $item->'.$pk.' }}/'.$pof.'">'.$pof.'</a></td>';
+                $childLink .= PHP_EOL . '<td><a href="/'.$this->getRouteResourceName($tableName).'/{{ $item->'.$pk.' }}/'.$pof.'">'.$pof.'</a></td>';
             }
             // $indexViewTemplate = str_replace('$CHILD_LINK$', '<td width="1"><a href="{{ route(\''.$childTable.'.index\', [$item->id]) }}">'.$childTable.'</a></td>', $indexViewTemplate);
         }
