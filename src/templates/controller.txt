@@ -63,10 +63,10 @@ $SET_EMPTY_AS_NULL$
             return redirect()->back()->withInput($request->input())->withErrors($e->getMessage());
         }
 
-        Session::flash('flash_message', 'Item successfully added!');
+        // Session::flash('flash_message', 'Item successfully added!');
         // return redirect()->route('$VIEW_FOLDER$.index'$IF_HAS_PARENT$, [$parentId]$END_HAS_PARENT$); // go to index
         // go to edit
-        return view('$VIEW_FOLDER$.edit')->withItem($item)$IF_HAS_PARENT$->withParent($parentId)$END_HAS_PARENT$;
+        return view('$VIEW_FOLDER$.edit')->withItem($item)$IF_HAS_PARENT$->withParent($parentId)$END_HAS_PARENT$->withSuccess('Item successfully added!');
 
     }
 
@@ -111,11 +111,11 @@ $SET_EMPTY_AS_NULL$
         catch(QueryException $e){
             return view('$VIEW_FOLDER$.edit')->withItem($item)->withInput($request->input())->withErrors($e->getMessage());
         }
-        Session::flash('flash_message', 'Item successfully edited!');
+        // Session::flash('flash_message', 'Item successfully edited!');
         Session::flash('highlight', $id);
         // return redirect()->route('$VIEW_FOLDER$.index'$IF_HAS_PARENT$, [$parentId]$END_HAS_PARENT$);
         // stay in the same form
-        return view('$VIEW_FOLDER$.edit')->withItem($item)$IF_HAS_PARENT$->withParent($parentId)$END_HAS_PARENT$;
+        return view('$VIEW_FOLDER$.edit')->withItem($item)$IF_HAS_PARENT$->withParent($parentId)$END_HAS_PARENT$->withSuccess('Item successfully edited!');
     }
 
 

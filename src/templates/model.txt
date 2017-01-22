@@ -32,14 +32,16 @@ class $NAME$ extends Model
      *
      * @var array
      */
-    protected $dates = [$DATES$];
+    protected $dates = [$DATES$
+    ];
 
     /**
      * The attributes that are mass assignable.
      *
      * @var array
      */
-    protected $fillable = [$FILLABLE$];
+    protected $fillable = [$FILLABLE$
+    ];
 
 
     /**

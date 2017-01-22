@@ -3,6 +3,7 @@
 namespace D4nd3v\Crud;
 
 use Illuminate\Console\Command;
+use League\Flysystem\Directory;
 
 class CRUDCommand extends Command
 {
@@ -90,6 +91,12 @@ class CRUDCommand extends Command
         $createViewTemplate = str_replace('$FORM$', $this->getViewForms($dbFields), $createViewTemplate);
         $createViewTemplate = $this->showHideParentInTemplate($createViewTemplate, $tableIsChild);
         $createViewTemplate = str_replace('$PRIMARY_KEY$', $pk, $createViewTemplate);
+
+        $masterLayout = $this->getMasterLayout();
+        if($masterLayout!="") {
+            $createViewTemplate = str_replace('$MASTER_LAYOUT$', '@extends(\''.$masterLayout.'\')', $createViewTemplate);
+        }
+
         if(!\File::exists($viewCreatePath) || $this->overwriteExistingFiles) {
             \File::put($viewCreatePath, $createViewTemplate);
         }
@@ -106,6 +113,12 @@ class CRUDCommand extends Command
         $editViewTemplate = str_replace('$FORM$', $this->getViewForms($dbFields, true), $editViewTemplate);
         $editViewTemplate = $this->showHideParentInTemplate($editViewTemplate, $tableIsChild);
         $editViewTemplate = str_replace('$PRIMARY_KEY$', $pk, $editViewTemplate);
+
+        $masterLayout = $this->getMasterLayout();
+        if($masterLayout!="") {
+            $editViewTemplate = str_replace('$MASTER_LAYOUT$', '@extends(\''.$masterLayout.'\')', $editViewTemplate);
+        }
+
         if(!\File::exists($viewEditPath) || $this->overwriteExistingFiles) {
             \File::put($viewEditPath, $editViewTemplate);
         }
@@ -135,6 +148,12 @@ class CRUDCommand extends Command
         $indexViewTemplate = str_replace('$CHILD_LINK_HEADER$', $childLinkHeader, $indexViewTemplate);
         $indexViewTemplate = str_replace('$CHILD_LINK$', $childLink, $indexViewTemplate);
         $indexViewTemplate = str_replace('$PRIMARY_KEY$', $pk, $indexViewTemplate);
+
+        $masterLayout = $this->getMasterLayout();
+        if($masterLayout!="") {
+            $indexViewTemplate = str_replace('$MASTER_LAYOUT$', '@extends(\''.$masterLayout.'\')', $indexViewTemplate);
+        }
+
         if(!\File::exists($viewIndexPath) || $this->overwriteExistingFiles) {
             \File::put($viewIndexPath, $indexViewTemplate);
         }
@@ -143,7 +162,18 @@ class CRUDCommand extends Command
 
 
 
-
+    private function getMasterLayout()
+    {
+        $layoutFolder = resource_path('views/layouts/');
+        if(\File::exists($layoutFolder)) {
+            foreach (glob($layoutFolder . "*.blade.php") as $filename) {
+                $x =  str_replace($layoutFolder, '', $filename);
+                $x =  str_replace('.blade.php', '', $x);
+                return 'layouts.'.$x;
+            }
+        }
+        return  '';
+    }
 
 
 
@@ -293,6 +323,13 @@ class CRUDCommand extends Command
         return false;
     }
 
+    function columnIsDate($c)
+    {
+        if($c->Type=="datetime" || $c->Type=="date" || $c->Type=="timestamp") {
+            return true;
+        }
+        return false;
+    }
 
 
     function getColumnsDates($dbFields)
@@ -417,10 +454,43 @@ class CRUDCommand extends Command
                 } else {
                     $value = '{{ old(\''.$fieldName.'\') }}';
                 }
-                $f .= str_repeat(" ", 5*4).'<div'.$highlightValidationError.'><input style="width: 300px" type="text" class="form-control input-sm" name="'.$fieldName.'" value="'.$value.'"></div>'.PHP_EOL;
-                $f .= str_repeat(" ", 4*4).'</td>'.PHP_EOL;
 
-                $f .= str_repeat(" ", 3*4).'</tr>'.PHP_EOL;
+                $inputSize = "300"; // default
+                if($this->columnIsNumeric($c)) {
+                    $inputSize = "150";
+                } else if ($this->columnIsDate($c)) {
+                    $inputSize = "150";
+                }
+
+
+                $htmlChecked = '';
+                if($editForm) {
+                    $htmlChecked .= '{{ $item->'.$fieldName.'?"checked":"" }}';
+                }
+
+                $htmlChecked .= '{{ old("'.$fieldName.'") ? "checked" : "" }}';
+
+
+
+                if($type=="text") {
+                    $formElement = '<textarea style="width: 300px" rows="3" class="form-control input-sm" name="' . $fieldName . '">' . $value . '</textarea>';
+                } else if($this->columnIsBool($c)) {
+                    $formElement = '<input type="hidden" value="0" name="' . $fieldName . '">';
+                    $formElement .= PHP_EOL . str_repeat(" ", 6*4) . '<input type="checkbox" class="form-control input-sm" '.$htmlChecked.' name="' . $fieldName . '" value="1">';
+                } else {
+                    $formElement = '<input style="width: '.$inputSize.'px" class="form-control input-sm" name="' . $fieldName . '" value="' . $value . '">';
+                }
+
+
+                $f .= str_repeat(" ", 5*4).'<div' . $highlightValidationError . '>
+                        '.$formElement.'
+                    </div>'.PHP_EOL;
+
+
+
+                $f .= str_repeat(" ", 4*4) . '</td>'.PHP_EOL;
+
+                $f .= str_repeat(" ", 3*4) . '</tr>'.PHP_EOL;
             }
 
         }
@@ -620,15 +690,15 @@ class CRUDCommand extends Command
 
         $columnsDates = $this->getColumnsDates($dbFields);
         foreach ($columnsDates as $dateC) {
-            $dates .= ", '" . $dateC . "'";
+            $dates .= ",".PHP_EOL."        '" . $dateC . "'";
         }
 
         $modelTemplate = str_replace('$DATES$', ltrim($dates, ', '), $modelTemplate);
 
         $fillable = "";
         foreach ($columns as $dbField) {
-            if($dbField!=$pk) {
-                $fillable .= ", '" . $dbField . "'";
+            if($dbField!=$pk && $dbField!="created_at" && $dbField!="updated_at" && $dbField!="deleted_at") {
+                $fillable .= ",".PHP_EOL."        '" . $dbField . "'";
             }
         }
         $modelTemplate = str_replace('$FILLABLE$', ltrim($fillable, ', '), $modelTemplate);
@@ -651,7 +721,7 @@ class CRUDCommand extends Command
 
         $modelTemplate = str_replace('?PRIMARY_KEY?', $pk, $modelTemplate);
         if($pk=="id") {
-            $modelTemplate = str_replace('$COMMENT_PRIMARY_KEY$', '//', $modelTemplate);
+            $modelTemplate = str_replace('$COMMENT_PRIMARY_KEY$', '// ', $modelTemplate);
         } else {
             $modelTemplate = str_replace('$COMMENT_PRIMARY_KEY$', '', $modelTemplate);
         }
