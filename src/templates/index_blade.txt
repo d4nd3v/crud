@@ -1,0 +1,148 @@
+@extends('layouts.admin')
+
+@section('content')
+
+
+
+    <a onclick="modal('{{ route('$ROUTE$.create'$IF_HAS_PARENT$, [$parent]$END_HAS_PARENT$) }}')"
+       href="javascript:void(0)" class="btn btn-primary btn-sm">
+        <span class="glyphicon glyphicon-plus"></span>
+        Add
+    </a>
+
+    &nbsp;&nbsp;&nbsp;&nbsp; {{ $items->total() }} items
+
+    <br><br>
+
+
+
+    @if(Session::has('flash_message'))
+        <div class="alert alert-success alert-dismissible" style="display: inline-block" role="alert">
+            <span class="glyphicon glyphicon-ok" aria-hidden="true"></span>
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+            &nbsp; {{ Session::get('flash_message') }}
+        </div>
+    @endif
+
+
+
+    @if($errors->any())
+        @foreach($errors->all() as $error)
+            <div class="alert alert-danger alert-dismissible" style="display: inline-block" role="alert">
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span></button>
+                {{ $error }}
+            </div>
+        @endforeach
+    @endif
+
+
+
+
+
+    <div class="table-responsive">
+    <table class="table table-bordered table-hover" style="width: auto !important;">
+        <thead>
+        <tr>
+$TABLE_HEADER$
+            $CHILD_LINK_HEADER$
+            <th>&nbsp;</th>
+            <th>&nbsp;</th>
+        </tr>
+        </thead>
+
+           @foreach($items as $item)
+
+               {{ $highlightClass = ""}}
+               @if (Session::has('highlight'))
+                   @if (Session::get('highlight') == $item->id)
+                       <!-- {{ $highlightClass = "info" }} -->
+                   @endif
+               @endif
+
+               <tr class="{{ $highlightClass }}">
+$TABLE$
+
+                   $CHILD_LINK$
+
+
+                   <td width="1">
+                       <form class="form-inline" method="POST" action="{{  route('$ROUTE$.destroy', [$IF_HAS_PARENT$$parent, $END_HAS_PARENT$$item->$PRIMARY_KEY$]) }}">
+                            {{ csrf_field() }}
+                           <input name="_method" type="hidden" value="DELETE">
+                           <button onclick="return confirm('Are you sure?')"  type="submit" class="btn btn-default btn-xs">
+                               <span class="glyphicon glyphicon-remove"></span>
+                           </button>
+                       </form>
+                   </td>
+
+                   <td width="1">
+                       <a onclick="modal('{{ route('$ROUTE$.edit', [$IF_HAS_PARENT$$parent, $END_HAS_PARENT$$item->$PRIMARY_KEY$]) }}')" href="javascript:void(0)" class="btn btn-primary btn-xs">
+                           <span class="glyphicon glyphicon-edit"></span>
+                           Edit
+                       </a>
+                   </td>
+
+
+               </tr>
+
+
+
+           @endforeach
+
+
+       </table>
+    </div>
+
+
+
+    @if ($items->lastPage() > 1)
+        {{ $items->appends(Request::except('page'))->links('vendor.pagination.default') }}
+    @endif
+
+
+
+    <!-- Modal -->
+    <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel">
+        <div class="modal-dialog modal-lg" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal"
+                            aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <!--<h4 class="modal-title" id="myModalLabel">Modal title</h4>-->
+                </div>
+                <div class="modal-body" style="padding: 0">
+                    <iframe frameborder="0" scrolling="auto" height="100%" width="100%" src=""></iframe>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function modal(url) {
+            $('#myModal').find('iframe').attr('src', url);
+            $('#myModal').modal();
+            $('#myModal .modal-body').css('height', $(window).height() * 0.7);
+        }
+    </script>
+
+    {{-- reload page after modal close --}}
+    <script>
+        $("#myModal").on("hidden.bs.modal", function () {
+            window.location.reload(true);
+        });
+    </script>
+
+
+@stop
+
+
+
+
+
+

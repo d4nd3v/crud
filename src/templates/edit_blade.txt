@@ -1,0 +1,64 @@
+@extends('layouts.admin')
+
+@section('content')
+
+
+{{--
+    <span class="glyphicon glyphicon-menu-left"></span>
+    <a href="{{ route('$ROUTE$.index'$IF_HAS_PARENT$, [$parent]$END_HAS_PARENT$) }}">Back to list</a>
+    <br><br>
+--}}
+
+    <form style="display:inline-block" class="form-inline" method="POST"
+          action="{{  route('$ROUTE$.update', [$IF_HAS_PARENT$$parent, $END_HAS_PARENT$$item->$PRIMARY_KEY$]) }}">
+
+
+        @if(Session::has('flash_message'))
+            <div class="alert alert-success alert-dismissible" role="alert">
+              <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                  <span aria-hidden="true">&times;</span>
+              </button>
+              &nbsp; {{ Session::get('flash_message') }}
+            </div>
+        @endif
+
+
+        @if($errors->any())
+
+                <div class="alert alert-danger alert-dismissible" role="alert">
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    @foreach($errors->all() as $error)
+                        {{ $error }}<br>
+                    @endforeach
+                </div>
+        @endif
+
+
+        <input name="_method" type="hidden" value="PUT">
+
+        {{ csrf_field() }}
+
+
+        <table style="width: auto;"class="table table-bordered">
+$FORM$
+            <tr>
+                <td>
+                    &nbsp;
+                </td>
+
+                <td>
+                    <button type="submit" class="btn btn-primary btn-md">Save</button>
+                    {{--
+                    <a href="{{ route('$ROUTE$.index', [$IF_HAS_PARENT$$parent$END_HAS_PARENT$]) }}" class="btn btn-default btn-sm pull-right">Cancel</a>
+                    --}}
+                </td>
+            </tr>
+        </table>
+
+
+    </form>
+
+
+@stop

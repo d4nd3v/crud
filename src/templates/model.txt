@@ -1,0 +1,57 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+$COMMENTS_USE_DELETES$use Illuminate\Database\Eloquent\SoftDeletes;
+
+class $NAME$ extends Model
+{
+    $COMMENTS_USE_DELETES$use SoftDeletes;
+
+    /**
+     * The table associated with the model.
+     *
+     * @var string
+     */
+    $COMMENT_TABLE_NAME$ protected $table = '$TABLE$';
+
+    $COMMENT_PRIMARY_KEY$protected $primaryKey = '?PRIMARY_KEY?';
+
+    // protected $incrementing = true;
+
+    /**
+     * Indicates if the model should be timestamped.
+     *
+     * @var bool
+     */
+    public $timestamps = $TIMESTAMPS$;
+
+    /**
+     * The attributes that should be mutated to dates.
+     *
+     * @var array
+     */
+    protected $dates = [$DATES$];
+
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array
+     */
+    protected $fillable = [$FILLABLE$];
+
+
+    /**
+     * The attributes that aren't mass assignable.
+     *
+     * @var array
+     */
+    // protected protected $guarded = ['?PRIMARY_KEY?'];
+
+
+
+    $HASMANY$
+    $BELONGSTO$
+
+}
