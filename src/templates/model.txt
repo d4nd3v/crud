@@ -49,7 +49,7 @@ class $NAME$ extends Model
      *
      * @var array
      */
-    // protected protected $guarded = ['?PRIMARY_KEY?'];
+    // protected $guarded = ['?PRIMARY_KEY?'];
 
 
 
