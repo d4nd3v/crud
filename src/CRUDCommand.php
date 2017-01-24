@@ -62,11 +62,34 @@ class CRUDCommand extends Command
             $this->createRoutes($tableName, $childOf, $crud);
             $this->createController($tableName, $dbFields, !empty($childOf));
             $this->createViews($tableName, $dbFields, !empty($childOf), $parentOf, $crud);
+            $this->createLayouts();
         }
 
         $this->info("Done.");
 
     }
+
+
+
+
+
+    public function createLayouts()
+    {
+        $destionationFolder = resource_path('views/layouts');
+        $this->createFileFromTemplate($this->templatePath . '/simple_layout.txt', $destionationFolder . '/simple.blade.php');
+    }
+
+
+
+    private function createFileFromTemplate($source, $destination)
+    {
+        if(!\File::exists($destination) || $this->overwriteExistingFiles) {
+            \File::put($destination, \File::get($source));
+        } else {
+            $this->warn('File: ' . $destination. ' already exist.');
+        }
+    }
+
 
 
 
@@ -224,6 +247,7 @@ class CRUDCommand extends Command
 
     private function getMasterLayout()
     {
+        /*
         $layoutFolder = resource_path('views/layouts/');
         if(\File::exists($layoutFolder)) {
             foreach (glob($layoutFolder . "*.blade.php") as $filename) {
@@ -233,6 +257,8 @@ class CRUDCommand extends Command
             }
         }
         return  '';
+        */
+        return 'layouts.simple';
     }
 
 

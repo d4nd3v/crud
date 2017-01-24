@@ -140,8 +140,11 @@ $TABLE$
 
     {{-- reload page after modal close --}}
     <script>
+        var refreshPageOnModalClose = false;
         $("#myModal").on("hidden.bs.modal", function () {
-            window.location.reload(true);
+            if(refreshPageOnModalClose) {
+                window.location.reload(true);
+            }
         });
     </script>
 
