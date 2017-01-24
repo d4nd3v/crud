@@ -120,7 +120,7 @@ $TABLE$
                             aria-label="Close"><span aria-hidden="true">&times;</span></button>
                     <!--<h4 class="modal-title" id="myModalLabel">Modal title</h4>-->
                 </div>
-                <div class="modal-body" style="padding: 0">
+                <div class="modal-body">
                     <iframe frameborder="0" scrolling="auto" height="100%" width="100%" src=""></iframe>
                 </div>
                 <div class="modal-footer">
