@@ -88,7 +88,7 @@ $TABLE$
                    </td>
                    $END_COMMENT_UPDATE$
                    <td width="1">
-                       <a onclick="modal('{{ route('$ROUTE$.view', [$IF_HAS_PARENT$$parent, $END_HAS_PARENT$$item->$PRIMARY_KEY$]) }}')" href="javascript:void(0)" class="btn btn-primary btn-xs">
+                       <a onclick="modal('{{ route('$ROUTE$.show', [$IF_HAS_PARENT$$parent, $END_HAS_PARENT$$item->$PRIMARY_KEY$]) }}')" href="javascript:void(0)" class="btn btn-primary btn-xs">
                            <span class="glyphicon glyphicon-view"></span>
                            View
                        </a>

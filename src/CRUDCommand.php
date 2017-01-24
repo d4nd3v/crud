@@ -80,6 +80,7 @@ class CRUDCommand extends Command
         $this->createCreateView($viewsPath, $tableName, $dbFields, $tableIsChild, $parentOf, $crud);
         $this->createEditView($viewsPath, $tableName, $dbFields, $tableIsChild, $parentOf, $crud);
         $this->createIndexView($viewsPath, $tableName, $dbFields, $tableIsChild, $parentOf, $crud);
+        $this->createViewView($viewsPath, $tableName, $dbFields, $tableIsChild, $parentOf, $crud);
     }
 
 
@@ -113,6 +114,27 @@ class CRUDCommand extends Command
         $newRoutePath = $this->getRouteResourceName($tableName);
         $editViewTemplate = str_replace('$ROUTE$', $newRoutePath, $editViewTemplate);
         $editViewTemplate = str_replace('$FORM$', $this->getViewForms($dbFields, true), $editViewTemplate);
+        $editViewTemplate = $this->showHideParentInTemplate($editViewTemplate, $tableIsChild);
+        $editViewTemplate = str_replace('$PRIMARY_KEY$', $pk, $editViewTemplate);
+
+        $masterLayout = $this->getMasterLayout();
+        if($masterLayout!="") {
+            $editViewTemplate = str_replace('$MASTER_LAYOUT$', '@extends(\''.$masterLayout.'\')', $editViewTemplate);
+        }
+
+        if(!\File::exists($viewEditPath) || $this->overwriteExistingFiles) {
+            \File::put($viewEditPath, $editViewTemplate);
+        }
+    }
+
+    public function createViewView($viewsPath, $tableName, $dbFields, $tableIsChild, $parentOf, $crud)
+    {
+        $pk = $this->getPrimaryKey($dbFields);
+        $editViewTemplate = \File::get(($this->templatePath . 'view_blade.txt'));
+        $viewEditPath = $viewsPath. '/view.blade.php';
+        $newRoutePath = $this->getRouteResourceName($tableName);
+        $editViewTemplate = str_replace('$ROUTE$', $newRoutePath, $editViewTemplate);
+        $editViewTemplate = str_replace('$FORM$', $this->getViewShowContent($dbFields, true), $editViewTemplate);
         $editViewTemplate = $this->showHideParentInTemplate($editViewTemplate, $tableIsChild);
         $editViewTemplate = str_replace('$PRIMARY_KEY$', $pk, $editViewTemplate);
 
@@ -563,6 +585,53 @@ class CRUDCommand extends Command
 
     }
 
+
+
+    public function getViewShowContent($dbFields, $editForm=false)
+    {
+        $f = "";
+        $counter = 0;
+        foreach ($dbFields as $c) {
+            $counter++;
+            $fieldName = $c->Field;
+
+            $formatedColumnName = $this->formatColumnName($c->Field);
+
+            $typeParts = explode('(', $c->Type);
+
+            $type = $typeParts[0];
+
+            $f .= str_repeat(" ", 3*4).'<tr>'.PHP_EOL;
+            $f .= str_repeat(" ", 4*4) . '<td>' . PHP_EOL;
+            $f .= str_repeat(" ", 5*4) . $formatedColumnName . PHP_EOL;
+            $f .= str_repeat(" ", 4*4) . '</td>' . PHP_EOL;
+            $f .= str_repeat(" ", 4*4).'<td>'.PHP_EOL;
+
+
+            $value = '{{ $item->'.$fieldName.' }}';
+
+
+            if($type=="text") {
+
+                $formElement = '' . $value . '';
+
+            } else if($this->columnIsBool($c)) {
+
+                $formElement = '{{ $item->'.$fieldName.' ? "Yes" : "No" }}';
+
+
+            } else {
+                $formElement = '' . $value . '';
+            }
+
+            $f .= str_repeat(" ", 5*4).''.$formElement.''.PHP_EOL;
+            $f .= str_repeat(" ", 4*4) . '</td>'.PHP_EOL;
+            $f .= str_repeat(" ", 3*4) . '</tr>'.PHP_EOL;
+
+        }
+        return $f;
+
+    }
 
 
 

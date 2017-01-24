@@ -73,7 +73,8 @@ $SET_EMPTY_AS_NULL$
 
     public function show($id)
     {
-
+        $item = $MODEL$::findOrFail($id);
+        return view('$VIEW_FOLDER$.view')->withItem($item)$IF_HAS_PARENT$->withParent($parentId)$END_HAS_PARENT$;
     }
 
 

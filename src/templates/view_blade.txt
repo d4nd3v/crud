@@ -9,9 +9,6 @@ $MASTER_LAYOUT$
     <br><br>
 --}}
 
-    <form style="display:inline-block" class="form-inline" method="POST"
-          action="{{  route('$ROUTE$.update', [$IF_HAS_PARENT$$parent, $END_HAS_PARENT$$item->$PRIMARY_KEY$]) }}">
-
 
         @if(Session::has('flash_message'))
             <div class="alert alert-success alert-dismissible" role="alert">
@@ -45,29 +42,12 @@ $MASTER_LAYOUT$
         @endif
 
 
-        <input name="_method" type="hidden" value="PUT">
-
-        {{ csrf_field() }}
-
 
         <table style="width: auto;"class="table table-bordered">
 $FORM$
-            <tr>
-                <td>
-                    &nbsp;
-                </td>
 
-                <td>
-                    <button type="submit" class="btn btn-primary btn-md">Save</button>
-                    {{--
-                    <a href="{{ route('$ROUTE$.index', [$IF_HAS_PARENT$$parent$END_HAS_PARENT$]) }}" class="btn btn-default btn-sm pull-right">Cancel</a>
-                    --}}
-                </td>
-            </tr>
         </table>
 
-
-    </form>
 
 
 @stop
