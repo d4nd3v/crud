@@ -12,7 +12,7 @@ class CRUDCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'generate:crud {table} {--model_only=false} {--child_of=} {--parent_of=} {--overwrite=false}';
+    protected $signature = 'generate:crud {table} {--model_only=false} {--child_of=} {--parent_of=} {--overwrite=false} {--crud=CRUD}';
 
     /**
      * The console command description.
@@ -50,6 +50,8 @@ class CRUDCommand extends Command
         $parentOf = $this->option('parent_of'); // table_1.fk1,table_2.fk2,table_3.fk3
         $childOf = $this->option('child_of'); // TABLE
 
+        $crud = strtolower($this->option('crud'));
+
         if($this->option('overwrite')=="true") {
             $this->overwriteExistingFiles =  true;
         }
@@ -57,9 +59,9 @@ class CRUDCommand extends Command
         $dbFields = \DB::select(\DB::raw("SHOW COLUMNS FROM ".$tableName.""));
         $this->createModel($tableName, $dbFields, $parentOf, $childOf);
         if($modelOnly!=="true") {
-            $this->createRoutes($tableName, $childOf);
+            $this->createRoutes($tableName, $childOf, $crud);
             $this->createController($tableName, $dbFields, !empty($childOf));
-            $this->createViews($tableName, $dbFields, !empty($childOf), $parentOf);
+            $this->createViews($tableName, $dbFields, !empty($childOf), $parentOf, $crud);
         }
 
         $this->info("Done.");
@@ -68,20 +70,20 @@ class CRUDCommand extends Command
 
 
 
-    public function createViews($tableName, $dbFields, $tableIsChild, $parentOf)
+    public function createViews($tableName, $dbFields, $tableIsChild, $parentOf, $crud)
     {
         // create view folder
         $viewsPath = resource_path('views') .'/'. $this->getViewFolder($tableName);
         if(!\File::exists($viewsPath)) {
             \File::makeDirectory($viewsPath, 0755, true);
         }
-        $this->createCreateView($viewsPath, $tableName, $dbFields, $tableIsChild, $parentOf);
-        $this->createEditView($viewsPath, $tableName, $dbFields, $tableIsChild, $parentOf);
-        $this->createIndexView($viewsPath, $tableName, $dbFields, $tableIsChild, $parentOf);
+        $this->createCreateView($viewsPath, $tableName, $dbFields, $tableIsChild, $parentOf, $crud);
+        $this->createEditView($viewsPath, $tableName, $dbFields, $tableIsChild, $parentOf, $crud);
+        $this->createIndexView($viewsPath, $tableName, $dbFields, $tableIsChild, $parentOf, $crud);
     }
 
 
-    public function createCreateView($viewsPath, $tableName, $dbFields, $tableIsChild, $parentOf)
+    public function createCreateView($viewsPath, $tableName, $dbFields, $tableIsChild, $parentOf, $crud)
     {
         $pk = $this->getPrimaryKey($dbFields);
         $createViewTemplate = \File::get(($this->templatePath . 'create_blade.txt'));
@@ -103,7 +105,7 @@ class CRUDCommand extends Command
     }
 
 
-    public function createEditView($viewsPath, $tableName, $dbFields, $tableIsChild, $parentOf)
+    public function createEditView($viewsPath, $tableName, $dbFields, $tableIsChild, $parentOf, $crud)
     {
         $pk = $this->getPrimaryKey($dbFields);
         $editViewTemplate = \File::get(($this->templatePath . 'edit_blade.txt'));
@@ -125,7 +127,7 @@ class CRUDCommand extends Command
     }
 
 
-    public function createIndexView($viewsPath, $tableName, $dbFields, $tableIsChild, $parentOf)
+    public function createIndexView($viewsPath, $tableName, $dbFields, $tableIsChild, $parentOf, $crud)
     {
         $pk = $this->getPrimaryKey($dbFields);
         $newRoutePath = $this->getRouteResourceName($tableName);
@@ -153,6 +155,42 @@ class CRUDCommand extends Command
         if($masterLayout!="") {
             $indexViewTemplate = str_replace('$MASTER_LAYOUT$', '@extends(\''.$masterLayout.'\')', $indexViewTemplate);
         }
+
+
+
+        if( strpos( $crud, "c" ) !== false ) {
+            // create is on, remove markers
+            $indexViewTemplate = str_replace('$START_COMMENT_CREATE$', "", $indexViewTemplate);
+            $indexViewTemplate = str_replace('$END_COMMENT_CREATE$', "", $indexViewTemplate);
+        } else {
+            // create is off, omment block
+            $indexViewTemplate = str_replace('$START_COMMENT_CREATE$', "{{--", $indexViewTemplate);
+            $indexViewTemplate = str_replace('$END_COMMENT_CREATE$', "--}}", $indexViewTemplate);
+        }
+
+        if( strpos( $crud, "d" ) !== false ) {
+            // DELETE is on, remove markers
+            $indexViewTemplate = str_replace('$START_COMMENT_DELETE$', "", $indexViewTemplate);
+            $indexViewTemplate = str_replace('$END_COMMENT_DELETE$', "", $indexViewTemplate);
+        } else {
+            // DELETE is off, omment block
+            $indexViewTemplate = str_replace('$START_COMMENT_DELETE$', "{{--", $indexViewTemplate);
+            $indexViewTemplate = str_replace('$END_COMMENT_DELETE$', "--}}", $indexViewTemplate);
+        }
+
+
+        if( strpos( $crud, "u" ) !== false ) {
+            // UPDATE is on, remove markers
+            $indexViewTemplate = str_replace('$START_COMMENT_UPDATE$', "", $indexViewTemplate);
+            $indexViewTemplate = str_replace('$END_COMMENT_UPDATE$', "", $indexViewTemplate);
+        } else {
+            // UPDATE is off, omment block
+            $indexViewTemplate = str_replace('$START_COMMENT_UPDATE$', "{{--", $indexViewTemplate);
+            $indexViewTemplate = str_replace('$END_COMMENT_UPDATE$', "--}}", $indexViewTemplate);
+        }
+
+
+
 
         if(!\File::exists($viewIndexPath) || $this->overwriteExistingFiles) {
             \File::put($viewIndexPath, $indexViewTemplate);
@@ -241,11 +279,22 @@ class CRUDCommand extends Command
         $displayedFields = $this->getTableDisplayedFields($columnsInfo);
         $f = "";
         foreach ($displayedFields as $column) {
-            $f .= str_repeat(" ", 3*4).'<th><a href="?order={{ $order==\'asc\'?"desc":"asc" }}&by='.$column->Field.'">'
-                . ($this->formatColumnName($column->Field))
-                . '</a>'
-                . ' @if($order_by==\''.$column->Field.'\') @if($order==\'asc\') <span class="glyphicon glyphicon-menu-up"></span> @else <span class="glyphicon glyphicon-menu-down"></span> @endif @endif '
-                . '</th>'
+            $f .= str_repeat(" ", 3*4).'<th>
+                <a href="?order={{ $order==\'asc\'?"desc":"asc" }}&by='.$column->Field.'">'
+                    . '       
+                    '. ($this->formatColumnName($column->Field))
+                    . '
+                </a>'
+                . ' 
+                @if($order_by==\''.$column->Field.'\') 
+                    @if($order==\'asc\') 
+                        <span class="glyphicon glyphicon-menu-up"></span> 
+                    @else 
+                        <span class="glyphicon glyphicon-menu-down"></span> 
+                    @endif 
+                @endif '
+                . '
+            </th>'
                 . PHP_EOL;
         }
         return $f;
@@ -518,7 +567,7 @@ class CRUDCommand extends Command
 
 
 
-    public function createRoutes($tableName, $childOf)
+    public function createRoutes($tableName, $childOf, $crud)
     {
 
         $routes = "";
@@ -541,13 +590,30 @@ class CRUDCommand extends Command
                 $newRoutePath = $childOf . '/{parentId}/'.$newRoutePath;
             }
             $routeText = "// Route::resource('" . $newRoutePath . "', '" . $this->getControllerName($tableName) . "', array('only' => array('index', 'create', 'store', 'edit', 'show', 'update', 'destroy')));";
-            $routeText .= PHP_EOL."Route::get('/".$tableName."', '".$this->getControllerName($tableName)."@index')->name('".$tableName.".index');";
-            $routeText .= PHP_EOL."Route::get('/".$tableName."/create', '".$this->getControllerName($tableName)."@create')->name('".$tableName.".create');";
-            $routeText .= PHP_EOL."Route::post('/".$tableName."', '".$this->getControllerName($tableName)."@store')->name('".$tableName.".store');";
-            $routeText .= PHP_EOL."Route::get('/".$tableName."/{id}/edit', '".$this->getControllerName($tableName)."@edit')->name('".$tableName.".edit');";
-            $routeText .= PHP_EOL."Route::get('/".$tableName."/{id}', '".$this->getControllerName($tableName)."@show')->name('".$tableName.".show');";
-            $routeText .= PHP_EOL."Route::put('/".$tableName."/{id}', '".$this->getControllerName($tableName)."@update')->name('".$tableName.".update');";
-            $routeText .= PHP_EOL."Route::delete('/".$tableName."/{id}', '".$this->getControllerName($tableName)."@destroy')->name('".$tableName.".destroy');";
+
+            if( strpos( $crud, "c" ) !== false ) {
+                // create is on
+                $routeText .= PHP_EOL."Route::get('/".$tableName."/create', '".$this->getControllerName($tableName)."@create')->name('".$tableName.".create');";
+                $routeText .= PHP_EOL."Route::put('/".$tableName."/{id}', '".$this->getControllerName($tableName)."@update')->name('".$tableName.".update');";
+            }
+
+            if( strpos( $crud, "r" ) !== false ) {
+                // read is on
+                $routeText .= PHP_EOL."Route::get('/".$tableName."', '".$this->getControllerName($tableName)."@index')->name('".$tableName.".index');";
+                $routeText .= PHP_EOL."Route::get('/".$tableName."/{id}', '".$this->getControllerName($tableName)."@show')->name('".$tableName.".show');";
+
+            }
+
+            if( strpos( $crud, "u" ) !== false ) {
+                // update is on
+                $routeText .= PHP_EOL."Route::get('/".$tableName."/{id}/edit', '".$this->getControllerName($tableName)."@edit')->name('".$tableName.".edit');";
+                $routeText .= PHP_EOL."Route::post('/".$tableName."', '".$this->getControllerName($tableName)."@store')->name('".$tableName.".store');";
+            }
+
+            if( strpos( $crud, "u" ) !== false ) {
+                // delete is on
+                $routeText .= PHP_EOL."Route::delete('/".$tableName."/{id}', '".$this->getControllerName($tableName)."@destroy')->name('".$tableName.".destroy');";
+            }
 
             $routeCollection = \Route::getRoutes();
             $routeAlreadyExists = false;

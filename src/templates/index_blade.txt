@@ -1,16 +1,16 @@
-@extends('layouts.admin')
+$MASTER_LAYOUT$
 
 @section('content')
 
 
-
+    $START_COMMENT_CREATE$
     <a onclick="modal('{{ route('$ROUTE$.create'$IF_HAS_PARENT$, [$parent]$END_HAS_PARENT$) }}')"
        href="javascript:void(0)" class="btn btn-primary btn-sm">
         <span class="glyphicon glyphicon-plus"></span>
         Add
-    </a>
-
-    &nbsp;&nbsp;&nbsp;&nbsp; {{ $items->total() }} items
+    </a> &nbsp;&nbsp;&nbsp;&nbsp;
+    $END_COMMENT_CREATE$
+    {{ $items->total() }} items
 
     <br><br>
 
@@ -48,7 +48,8 @@
         <tr>
 $TABLE_HEADER$
             $CHILD_LINK_HEADER$
-            <th>&nbsp;</th>
+            $START_COMMENT_DELETE$<th>&nbsp;</th>$END_COMMENT_DELETE$
+            $START_COMMENT_UPDATE$<th>&nbsp;</th>$END_COMMENT_UPDATE$
             <th>&nbsp;</th>
         </tr>
         </thead>
@@ -67,7 +68,7 @@ $TABLE$
 
                    $CHILD_LINK$
 
-
+                   $START_COMMENT_DELETE$
                    <td width="1">
                        <form class="form-inline" method="POST" action="{{  route('$ROUTE$.destroy', [$IF_HAS_PARENT$$parent, $END_HAS_PARENT$$item->$PRIMARY_KEY$]) }}">
                             {{ csrf_field() }}
@@ -77,15 +78,21 @@ $TABLE$
                            </button>
                        </form>
                    </td>
-
+                   $END_COMMENT_DELETE$
+                   $START_COMMENT_UPDATE$
                    <td width="1">
                        <a onclick="modal('{{ route('$ROUTE$.edit', [$IF_HAS_PARENT$$parent, $END_HAS_PARENT$$item->$PRIMARY_KEY$]) }}')" href="javascript:void(0)" class="btn btn-primary btn-xs">
                            <span class="glyphicon glyphicon-edit"></span>
                            Edit
                        </a>
                    </td>
-
-
+                   $END_COMMENT_UPDATE$
+                   <td width="1">
+                       <a onclick="modal('{{ route('$ROUTE$.view', [$IF_HAS_PARENT$$parent, $END_HAS_PARENT$$item->$PRIMARY_KEY$]) }}')" href="javascript:void(0)" class="btn btn-primary btn-xs">
+                           <span class="glyphicon glyphicon-view"></span>
+                           View
+                       </a>
+                   </td>
                </tr>
 
 
