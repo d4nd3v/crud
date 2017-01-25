@@ -431,7 +431,7 @@ class CRUDCommand extends Command
 
     function getColumnsDates($dbFields)
     {
-        $list = "";
+        $list = array();
         foreach ($dbFields as $c) {
             if($c->Type=="datetime" || $c->Type=="date" || $c->Type=="timestamp") {
                 $list[] = $c->Field;
