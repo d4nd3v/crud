@@ -1,4 +1,4 @@
-# Laravel 5 CRUD Generator
+# Laravel 5.3 CRUD Generator
 
 ## Usage
 
@@ -44,6 +44,7 @@ The generated files are:
 - resources/views/[Resource]/create.blade.php
 - resources/views/[Resource]/edit.blade.php
 - resources/views/[Resource]/index.blade.php
+- resources/views/[Resource]/view.blade.php
 - \+ added route resource in routes/web.php
 
 
