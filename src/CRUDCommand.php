@@ -118,7 +118,7 @@ class CRUDCommand extends Command
         $createViewTemplate = $this->showHideParentInTemplate($createViewTemplate, $tableIsChild);
         $createViewTemplate = str_replace('$PRIMARY_KEY$', $pk, $createViewTemplate);
 
-        $masterLayout = $this->getMasterLayout();
+        $masterLayout = $this->getSimpleMasterLayout();
         if($masterLayout!="") {
             $createViewTemplate = str_replace('$MASTER_LAYOUT$', '@extends(\''.$masterLayout.'\')', $createViewTemplate);
         }
@@ -140,7 +140,7 @@ class CRUDCommand extends Command
         $editViewTemplate = $this->showHideParentInTemplate($editViewTemplate, $tableIsChild);
         $editViewTemplate = str_replace('$PRIMARY_KEY$', $pk, $editViewTemplate);
 
-        $masterLayout = $this->getMasterLayout();
+        $masterLayout = $this->getSimpleMasterLayout();
         if($masterLayout!="") {
             $editViewTemplate = str_replace('$MASTER_LAYOUT$', '@extends(\''.$masterLayout.'\')', $editViewTemplate);
         }
@@ -161,7 +161,7 @@ class CRUDCommand extends Command
         $editViewTemplate = $this->showHideParentInTemplate($editViewTemplate, $tableIsChild);
         $editViewTemplate = str_replace('$PRIMARY_KEY$', $pk, $editViewTemplate);
 
-        $masterLayout = $this->getMasterLayout();
+        $masterLayout = $this->getSimpleMasterLayout();
         if($masterLayout!="") {
             $editViewTemplate = str_replace('$MASTER_LAYOUT$', '@extends(\''.$masterLayout.'\')', $editViewTemplate);
         }
@@ -247,7 +247,6 @@ class CRUDCommand extends Command
 
     private function getMasterLayout()
     {
-        /*
         $layoutFolder = resource_path('views/layouts/');
         if(\File::exists($layoutFolder)) {
             foreach (glob($layoutFolder . "*.blade.php") as $filename) {
@@ -257,7 +256,10 @@ class CRUDCommand extends Command
             }
         }
         return  '';
-        */
+    }
+
+    private function getSimpleMasterLayout()
+    {
         return 'layouts.simple';
     }
 
@@ -322,28 +324,37 @@ class CRUDCommand extends Command
 
 
 
-    public function getViewIndexTableHeader($columnsInfo)
+    public function getViewIndexTableHeader($dbFields)
     {
-        $displayedFields = $this->getTableDisplayedFields($columnsInfo);
+
         $f = "";
-        foreach ($displayedFields as $column) {
-            $f .= str_repeat(" ", 3*4).'<th>
-                <a href="?order={{ $order==\'asc\'?"desc":"asc" }}&by='.$column->Field.'">'
-                    . '       
-                    '. ($this->formatColumnName($column->Field))
-                    . '
-                </a>'
-                . ' 
-                @if($order_by==\''.$column->Field.'\') 
-                    @if($order==\'asc\') 
-                        <span class="glyphicon glyphicon-menu-up"></span> 
-                    @else 
-                        <span class="glyphicon glyphicon-menu-down"></span> 
-                    @endif 
-                @endif '
-                . '
-            </th>'
-                . PHP_EOL;
+        foreach ($dbFields as $column) {
+
+            if($column->Field!="deleted_at") {
+
+                $type = $column->Type;
+                if ($type == "text" || $type == "longtext" || $type == "binary" || $type == "varbinary") {
+                    // do noy show big text columns, show comment
+                    $f .= str_repeat(" ", 4 * 4) . '{{-- <th>'.($this->formatColumnName($column->Field)).'</th> --}}'.PHP_EOL;
+                } else {
+                    $f .= str_repeat(" ", 4 * 4) . '<th>
+                    <a href="?order={{ $order==\'asc\'?"desc":"asc" }}&by=' . $column->Field . '">'
+                        . '       
+                        ' . ($this->formatColumnName($column->Field))
+                        . '
+                    </a>'
+                        . ' 
+                    @if($order_by==\'' . $column->Field . '\') 
+                        @if($order==\'asc\') 
+                            <span class="glyphicon glyphicon-menu-up"></span> 
+                        @else 
+                            <span class="glyphicon glyphicon-menu-down"></span> 
+                        @endif 
+                    @endif '
+                        . '
+                </th>' . PHP_EOL;
+                }
+            }
         }
         return $f;
     }
@@ -353,45 +364,70 @@ class CRUDCommand extends Command
     public function getViewIndexTable($columnsInfo, $tableName)
     {
 
-        $displayedFields = $this->getTableDisplayedFields($columnsInfo);
         $f = "";
-        foreach ($displayedFields as $column) {
-            $columnIsNumber = $this->columnIsNumeric($column);
-            $columnIsBool = $this->columnIsBool($column);
-            $columnIsString = $this->columnIsString($column);
-            $alignText = "";
-            if($column->Field=="created_at" || $column->Field=="updated_at") {
-                $c = '{{ \Carbon\Carbon::parse($item->' . $column->Field . ")->diffForHumans() }}";
-            } else if($column->Type=="datetime" || $column->Type=="date" || $column->Type=="timestamp") {
-                $c = '{{ $item->' . $column->Field.' }}';
-            } else if($columnIsNumber) {
-                $alignText = ' align="right"';
-                $c = '{{ $item->' . $column->Field . ' }}';
-            } else if ($columnIsBool) {
-                $alignText = ' align="center"';
+        foreach ($columnsInfo as $column) {
+
+
+            if($column->Field!="deleted_at") {
+
+
+                $columnIsNumber = $this->columnIsNumeric($column);
+                $columnIsBool = $this->columnIsBool($column);
+                $columnIsString = $this->columnIsString($column);
+                $alignText = "";
+
+
+                if($column->Field=="created_at" || $column->Field=="updated_at") {
+                    $c = '{{ \Carbon\Carbon::parse($item->' . $column->Field . ")->diffForHumans() }}";
+                } else if($column->Type=="datetime" || $column->Type=="date" || $column->Type=="timestamp") {
+                    $c = '{{ $item->' . $column->Field.' }}';
+                } else if($columnIsNumber) {
+                    $alignText = ' align="right"';
+                    $c = '{{ $item->' . $column->Field . ' }}';
+                } else if ($columnIsBool) {
+                    $alignText = ' align="center"';
 
 
 
-//                    $c = PHP_EOL.'
-//                        <form class="form-inline" method="POST" action="{{  route(\''.$this->getRouteResourceName($tableName).'.update\', [$item->id]) }}">
-//                            {{ csrf_field() }}
-//                           <input name="_method" type="hidden" value="PUT">
-//                           <button  type="submit" class="btn btn-link btn-xs {{ ($item->' . $column->Field . '?"btn-success":"btn-danger") }}">
-//                               {{ ($item->' . $column->Field . '?"Yes":"No") }}
-//                           </button>
-//                       </form>'.PHP_EOL;
+    //                    $c = PHP_EOL.'
+    //                        <form class="form-inline" method="POST" action="{{  route(\''.$this->getRouteResourceName($tableName).'.update\', [$item->id]) }}">
+    //                            {{ csrf_field() }}
+    //                           <input name="_method" type="hidden" value="PUT">
+    //                           <button  type="submit" class="btn btn-link btn-xs {{ ($item->' . $column->Field . '?"btn-success":"btn-danger") }}">
+    //                               {{ ($item->' . $column->Field . '?"Yes":"No") }}
+    //                           </button>
+    //                       </form>'.PHP_EOL;
 
 
-                $c = '{{ ($item->' . $column->Field.'?"Yes":"No") }}';
+                    $c = '{{ ($item->' . $column->Field.' ? "Yes" : "No" ) }}';
 
-            } else if ($columnIsString) {
-                $c = '{{ str_limit($item->'.$column->Field.', $limit = 16, $end = "...") }}';
+                } else if($column->Type=="text" || $column->Type=="longtext" || $column->Type=="binary" || $column->Type=="varbinary") {
+                    $c = '{{ $item->' . $column->Field . ' }}';
 
-            } else {
-                $c = '{{ $item->' . $column->Field . ' }}';
+                } else if ($columnIsString) {
+                    $c = '{{ str_limit($item->'.$column->Field.', $limit = 32, $end = "...") }}';
+
+                } else {
+                    $c = '{{ $item->' . $column->Field . ' }}';
+                }
+
+
+                if ($column->Type == "text" || $column->Type == "longtext" || $column->Type == "binary" || $column->Type == "varbinary") {
+                    // do noy show big text columns, show comment
+                    $f .= PHP_EOL.str_repeat(" ", 4*4).'{{--';
+                }
+
+
+                $f .= PHP_EOL.str_repeat(" ", 4*4).'<td'.($alignText).'> ';
+                $f .= PHP_EOL.str_repeat(" ", 5*4).$c;
+                $f .= PHP_EOL.str_repeat(" ", 4*4).'</td>';
+
+
+                if ($column->Type == "text" || $column->Type == "longtext" || $column->Type == "binary" || $column->Type == "varbinary") {
+                    // do noy show big text columns, show comment
+                    $f .= PHP_EOL.str_repeat(" ", 4*4).'--}}';
+                }
             }
-
-            $f .= str_repeat(" ", 3*4).'<td'.($alignText).'> '.$c.' </td>'.PHP_EOL;
         }
         return $f;
 
@@ -478,37 +514,6 @@ class CRUDCommand extends Command
 
 
 
-
-
-    public function getTableDisplayedFields($columnsInfo)
-    {
-        $fields = array();
-        foreach ($columnsInfo as $c) {
-            $fieldName = $c->Field;
-
-            $typeParts = explode('(', $c->Type);
-            $size = 0;
-            if(count($typeParts)>1) {
-                $size = str_replace(')','',$typeParts[1]);
-            }
-            $type = $typeParts[0];
-
-            // $fieldName!="created_at" && $fieldName!="updated_at" &&
-            $inTable = true;
-            if($fieldName=="deleted_at") {
-                $inTable = false;
-            } else if($type=="text" || $type=="longtext" || $type=="binary" || $type=="varbinary") {
-                $inTable = false;
-            }
-            if($inTable) {
-                $fields[] = $c;
-            }
-        }
-        return $fields;
-    }
-
-
-
     public function formatColumnName($name)
     {
         return ucfirst(str_replace('_', ' ', $name));
@@ -580,7 +585,7 @@ class CRUDCommand extends Command
 
 
                 if($type=="text") {
-                    $formElement = '<textarea style="width: 300px" rows="3" class="form-control input-sm" name="' . $fieldName . '">' . $value . '</textarea>';
+                    $formElement = '<textarea style="width: 600px" rows="5" class="form-control input-sm" name="' . $fieldName . '">' . $value . '</textarea>';
                 } else if($this->columnIsBool($c)) {
                     $formElement = '<input type="hidden" value="0" name="' . $fieldName . '">';
                     $formElement .= PHP_EOL . str_repeat(" ", 6*4) . '<input type="checkbox" class="form-control input-sm" '.$htmlChecked.' name="' . $fieldName . '" value="1">';
@@ -684,30 +689,30 @@ class CRUDCommand extends Command
             if($tableIsChild) {
                 $newRoutePath = $childOf . '/{parentId}/'.$newRoutePath;
             }
-            $routeText = "// Route::resource('" . $newRoutePath . "', '" . $this->getControllerName($tableName) . "', array('only' => array('index', 'create', 'store', 'edit', 'show', 'update', 'destroy')));";
+            $routeText = "// Route::resource('" . $newRoutePath . "', 'Crud\\" . $this->getControllerName($tableName) . "', array('only' => array('index', 'create', 'store', 'edit', 'show', 'update', 'destroy')));";
 
             if( strpos( $crud, "c" ) !== false ) {
                 // create is on
-                $routeText .= PHP_EOL."Route::get('/".$tableName."/create', '".$this->getControllerName($tableName)."@create')->name('".$tableName.".create');";
-                $routeText .= PHP_EOL."Route::put('/".$tableName."/{id}', '".$this->getControllerName($tableName)."@update')->name('".$tableName.".update');";
+                $routeText .= PHP_EOL."Route::get('/".$tableName."/create', 'Crud\\".$this->getControllerName($tableName)."@create')->name('".$tableName.".create');";
+                $routeText .= PHP_EOL."Route::put('/".$tableName."/{id}', 'Crud\\".$this->getControllerName($tableName)."@update')->name('".$tableName.".update');";
             }
 
             if( strpos( $crud, "r" ) !== false ) {
                 // read is on
-                $routeText .= PHP_EOL."Route::get('/".$tableName."', '".$this->getControllerName($tableName)."@index')->name('".$tableName.".index');";
-                $routeText .= PHP_EOL."Route::get('/".$tableName."/{id}', '".$this->getControllerName($tableName)."@show')->name('".$tableName.".show');";
+                $routeText .= PHP_EOL."Route::get('/".$tableName."', 'Crud\\".$this->getControllerName($tableName)."@index')->name('".$tableName.".index');";
+                $routeText .= PHP_EOL."Route::get('/".$tableName."/{id}', 'Crud\\".$this->getControllerName($tableName)."@show')->name('".$tableName.".show');";
 
             }
 
             if( strpos( $crud, "u" ) !== false ) {
                 // update is on
-                $routeText .= PHP_EOL."Route::get('/".$tableName."/{id}/edit', '".$this->getControllerName($tableName)."@edit')->name('".$tableName.".edit');";
-                $routeText .= PHP_EOL."Route::post('/".$tableName."', '".$this->getControllerName($tableName)."@store')->name('".$tableName.".store');";
+                $routeText .= PHP_EOL."Route::get('/".$tableName."/{id}/edit', 'Crud\\".$this->getControllerName($tableName)."@edit')->name('".$tableName.".edit');";
+                $routeText .= PHP_EOL."Route::post('/".$tableName."', 'Crud\\".$this->getControllerName($tableName)."@store')->name('".$tableName.".store');";
             }
 
             if( strpos( $crud, "u" ) !== false ) {
                 // delete is on
-                $routeText .= PHP_EOL."Route::delete('/".$tableName."/{id}', '".$this->getControllerName($tableName)."@destroy')->name('".$tableName.".destroy');";
+                $routeText .= PHP_EOL."Route::delete('/".$tableName."/{id}', 'Crud\\".$this->getControllerName($tableName)."@destroy')->name('".$tableName.".destroy');";
             }
 
             $routeCollection = \Route::getRoutes();
@@ -787,7 +792,13 @@ class CRUDCommand extends Command
 
 
         // region  write generated model to disk
-        $controllerPath = app_path('Http/Controllers').'/'.$controllerFileName;
+        $controllerFolderPath = app_path('Http/Controllers/Crud');
+        $controllerPath = $controllerFolderPath . '/'.$controllerFileName;
+
+        if(!\File::exists($controllerFolderPath)) {
+            \File::makeDirectory($controllerFolderPath, 0755, true);
+        }
+
         if(\File::exists($controllerPath) && !$this->overwriteExistingFiles) {
             $this->warn('Controller '.$controllerPath.' already exists, it is not overwritten.');
         } else {
@@ -829,7 +840,7 @@ class CRUDCommand extends Command
 
     private function getControllerName($tableName)
     {
-        return ucwords((camel_case($tableName))) . 'CRUDController';
+        return ucwords((camel_case($tableName))) . 'Controller';
     }
 
 

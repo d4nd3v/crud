@@ -45,7 +45,7 @@ $MASTER_LAYOUT$
     <div class="table-responsive">
     <table class="table table-bordered table-hover" style="width: auto !important;">
         <thead>
-        <tr>
+            <tr>
 $TABLE_HEADER$
             $CHILD_LINK_HEADER$
             $START_COMMENT_DELETE$<th>&nbsp;</th>$END_COMMENT_DELETE$
@@ -54,53 +54,53 @@ $TABLE_HEADER$
         </tr>
         </thead>
 
-           @foreach($items as $item)
+        @foreach($items as $item)
 
-               {{ $highlightClass = ""}}
-               @if (Session::has('highlight'))
-                   @if (Session::get('highlight') == $item->id)
-                       <!-- {{ $highlightClass = "info" }} -->
-                   @endif
-               @endif
+            {{ $highlightClass = ""}}
+            @if (Session::has('highlight'))
+                @if (Session::get('highlight') == $item->id)
+                   <!-- {{ $highlightClass = "info" }} -->
+                @endif
+            @endif
 
-               <tr class="{{ $highlightClass }}">
+            <tr class="{{ $highlightClass }}">
 $TABLE$
 
-                   $CHILD_LINK$
+                $CHILD_LINK$
 
-                   $START_COMMENT_DELETE$
-                   <td width="1">
-                       <form class="form-inline" method="POST" action="{{  route('$ROUTE$.destroy', [$IF_HAS_PARENT$$parent, $END_HAS_PARENT$$item->$PRIMARY_KEY$]) }}">
-                            {{ csrf_field() }}
-                           <input name="_method" type="hidden" value="DELETE">
-                           <button onclick="return confirm('Are you sure?')"  type="submit" class="btn btn-default btn-xs">
-                               <span class="glyphicon glyphicon-remove"></span>
-                           </button>
-                       </form>
-                   </td>
-                   $END_COMMENT_DELETE$
-                   $START_COMMENT_UPDATE$
-                   <td width="1">
-                       <a onclick="modal('{{ route('$ROUTE$.edit', [$IF_HAS_PARENT$$parent, $END_HAS_PARENT$$item->$PRIMARY_KEY$]) }}')" href="javascript:void(0)" class="btn btn-primary btn-xs">
-                           <span class="glyphicon glyphicon-edit"></span>
-                           Edit
-                       </a>
-                   </td>
-                   $END_COMMENT_UPDATE$
-                   <td width="1">
-                       <a onclick="modal('{{ route('$ROUTE$.show', [$IF_HAS_PARENT$$parent, $END_HAS_PARENT$$item->$PRIMARY_KEY$]) }}')" href="javascript:void(0)" class="btn btn-primary btn-xs">
-                           <span class="glyphicon glyphicon-view"></span>
-                           View
-                       </a>
-                   </td>
-               </tr>
-
-
-
-           @endforeach
+                $START_COMMENT_DELETE$
+                <td width="1">
+                   <form class="form-inline" method="POST" action="{{  route('$ROUTE$.destroy', [$IF_HAS_PARENT$$parent, $END_HAS_PARENT$$item->$PRIMARY_KEY$]) }}">
+                        {{ csrf_field() }}
+                       <input name="_method" type="hidden" value="DELETE">
+                       <button onclick="return confirm('Are you sure?')"  type="submit" class="btn btn-default btn-xs">
+                           <span class="glyphicon glyphicon-remove"></span>
+                       </button>
+                   </form>
+                </td>
+                $END_COMMENT_DELETE$
+                $START_COMMENT_UPDATE$
+                <td width="1">
+                   <a onclick="modal('{{ route('$ROUTE$.edit', [$IF_HAS_PARENT$$parent, $END_HAS_PARENT$$item->$PRIMARY_KEY$]) }}')" href="javascript:void(0)" class="btn btn-primary btn-xs">
+                       <span class="glyphicon glyphicon-edit"></span>
+                       Edit
+                   </a>
+                </td>
+                $END_COMMENT_UPDATE$
+                <td width="1">
+                   <a onclick="modal('{{ route('$ROUTE$.show', [$IF_HAS_PARENT$$parent, $END_HAS_PARENT$$item->$PRIMARY_KEY$]) }}')" href="javascript:void(0)" class="btn btn-primary btn-xs">
+                       <span class="glyphicon glyphicon-view"></span>
+                       View
+                   </a>
+                </td>
+            </tr>
 
 
-       </table>
+
+            @endforeach
+
+
+        </table>
     </div>
 
 

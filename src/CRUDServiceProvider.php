@@ -7,7 +7,7 @@ use Illuminate\Support\ServiceProvider;
 class CRUDServiceProvider extends ServiceProvider {
 
     protected $commands = [
-        'D4nd3v\Crud\CRUDCommand',
+        'D4nd3v\Crud\CrudCommand',
     ];
 
     public function register(){

@@ -16,7 +16,7 @@ Add the provider in `app/Providers/AppServiceProvider.php`
 public function register()
 {
     ...
-    $this->app->register('D4nd3v\Crud\CRUDServiceProvider');
+    $this->app->register('D4nd3v\Crud\CrudServiceProvider');
 }
 ```
 
@@ -39,7 +39,7 @@ If you need pagination don't forget to run:
 `php artisan vendor:publish --tag=laravel-pagination`
 
 The generated files are:
-- app/Http/Controllers/[Resource]CRUDController.php
+- app/Http/Controllers/Crud/[Resource]Controller.php
 - app/Models/[Resource].php
 - resources/views/[Resource]/create.blade.php
 - resources/views/[Resource]/edit.blade.php
