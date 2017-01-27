@@ -338,7 +338,7 @@ class CRUDCommand extends Command
                     $f .= str_repeat(" ", 4 * 4) . '{{-- <th>'.($this->formatColumnName($column->Field)).'</th> --}}'.PHP_EOL;
                 } else {
                     $f .= str_repeat(" ", 4 * 4) . '<th>
-                    <a href="?order={{ $order==\'asc\'?"desc":"asc" }}&by=' . $column->Field . '">'
+                    <a href="{{ request()->fullUrlWithQuery(["order"=>($order=="asc"?"desc":"asc"), "by"=>"' . $column->Field . '", "page"=>1]) }}">'
                         . '       
                         ' . ($this->formatColumnName($column->Field))
                         . '
