@@ -691,29 +691,42 @@ class CRUDCommand extends Command
             }
             $routeText = "// Route::resource('" . $newRoutePath . "', 'Crud\\" . $this->getControllerName($tableName) . "', array('only' => array('index', 'create', 'store', 'edit', 'show', 'update', 'destroy')));";
 
+            $comment = "// ";
             if( strpos( $crud, "c" ) !== false ) {
                 // create is on
-                $routeText .= PHP_EOL."Route::get('/".$tableName."/create', 'Crud\\".$this->getControllerName($tableName)."@create')->name('".$tableName.".create');";
-                $routeText .= PHP_EOL."Route::put('/".$tableName."/{id}', 'Crud\\".$this->getControllerName($tableName)."@update')->name('".$tableName.".update');";
+                $comment = "";
             }
+            $routeText .= PHP_EOL.$comment."Route::get('/".$tableName."/create', 'Crud\\".$this->getControllerName($tableName)."@create')->name('".$tableName.".create');";
+            $routeText .= PHP_EOL.$comment."Route::put('/".$tableName."/{id}', 'Crud\\".$this->getControllerName($tableName)."@update')->name('".$tableName.".update');";
 
+
+            $comment = "// ";
             if( strpos( $crud, "r" ) !== false ) {
                 // read is on
-                $routeText .= PHP_EOL."Route::get('/".$tableName."', 'Crud\\".$this->getControllerName($tableName)."@index')->name('".$tableName.".index');";
-                $routeText .= PHP_EOL."Route::get('/".$tableName."/{id}', 'Crud\\".$this->getControllerName($tableName)."@show')->name('".$tableName.".show');";
-
+                $comment = "";
             }
+            $routeText .= PHP_EOL.$comment."Route::get('/".$tableName."', 'Crud\\".$this->getControllerName($tableName)."@index')->name('".$tableName.".index');";
+            $routeText .= PHP_EOL.$comment."Route::get('/".$tableName."/{id}', 'Crud\\".$this->getControllerName($tableName)."@show')->name('".$tableName.".show');";
 
+
+            $comment = "// ";
             if( strpos( $crud, "u" ) !== false ) {
                 // update is on
-                $routeText .= PHP_EOL."Route::get('/".$tableName."/{id}/edit', 'Crud\\".$this->getControllerName($tableName)."@edit')->name('".$tableName.".edit');";
-                $routeText .= PHP_EOL."Route::post('/".$tableName."', 'Crud\\".$this->getControllerName($tableName)."@store')->name('".$tableName.".store');";
-            }
+                $comment = "";
 
-            if( strpos( $crud, "u" ) !== false ) {
-                // delete is on
-                $routeText .= PHP_EOL."Route::delete('/".$tableName."/{id}', 'Crud\\".$this->getControllerName($tableName)."@destroy')->name('".$tableName.".destroy');";
             }
+            $routeText .= PHP_EOL.$comment."Route::get('/".$tableName."/{id}/edit', 'Crud\\".$this->getControllerName($tableName)."@edit')->name('".$tableName.".edit');";
+            $routeText .= PHP_EOL.$comment."Route::post('/".$tableName."', 'Crud\\".$this->getControllerName($tableName)."@store')->name('".$tableName.".store');";
+
+
+            $comment = "// ";
+            if( strpos( $crud, "d" ) !== false ) {
+                // delete is on
+                $comment = "";
+            }
+            $routeText .= PHP_EOL.$comment."Route::delete('/".$tableName."/{id}', 'Crud\\".$this->getControllerName($tableName)."@destroy')->name('".$tableName.".destroy');";
+
+
 
             $routeCollection = \Route::getRoutes();
             $routeAlreadyExists = false;
