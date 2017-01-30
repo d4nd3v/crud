@@ -5,7 +5,7 @@ namespace D4nd3v\Crud;
 use Illuminate\Console\Command;
 use League\Flysystem\Directory;
 
-class CRUDCommand extends Command
+class CrudCommand extends Command
 {
     /**
      * The name and signature of the console command.
@@ -691,14 +691,7 @@ class CRUDCommand extends Command
             }
             $routeText = "// Route::resource('" . $newRoutePath . "', 'Crud\\" . $this->getControllerName($tableName) . "', array('only' => array('index', 'create', 'store', 'edit', 'show', 'update', 'destroy')));";
 
-            $comment = "// ";
-            if( strpos( $crud, "c" ) !== false ) {
-                // create is on
-                $comment = "";
-            }
-            $routeText .= PHP_EOL.$comment."Route::get('/".$tableName."/create', 'Crud\\".$this->getControllerName($tableName)."@create')->name('".$tableName.".create');";
-            $routeText .= PHP_EOL.$comment."Route::put('/".$tableName."/{id}', 'Crud\\".$this->getControllerName($tableName)."@update')->name('".$tableName.".update');";
-
+			
 
             $comment = "// ";
             if( strpos( $crud, "r" ) !== false ) {
@@ -707,6 +700,16 @@ class CRUDCommand extends Command
             }
             $routeText .= PHP_EOL.$comment."Route::get('/".$tableName."', 'Crud\\".$this->getControllerName($tableName)."@index')->name('".$tableName.".index');";
             $routeText .= PHP_EOL.$comment."Route::get('/".$tableName."/{id}', 'Crud\\".$this->getControllerName($tableName)."@show')->name('".$tableName.".show');";
+
+			
+			
+            $comment = "// ";
+            if( strpos( $crud, "c" ) !== false ) {
+                // create is on
+                $comment = "";
+            }
+            $routeText .= PHP_EOL.$comment."Route::get('/".$tableName."/create', 'Crud\\".$this->getControllerName($tableName)."@create')->name('".$tableName.".create');";
+            $routeText .= PHP_EOL.$comment."Route::put('/".$tableName."/{id}', 'Crud\\".$this->getControllerName($tableName)."@update')->name('".$tableName.".update');";
 
 
             $comment = "// ";
