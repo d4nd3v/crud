@@ -5,7 +5,7 @@
 ### Step 1: Install Through Composer
 
 ```
-composer require d4nd3v/crud
+composer require d4nd3v/crud:dev-master
 ```
 
 ### Step 2: Add the Service Provider
@@ -16,7 +16,9 @@ Add the provider in `app/Providers/AppServiceProvider.php`
 public function register()
 {
     ...
-    $this->app->register('D4nd3v\Crud\CrudServiceProvider');
+	if ($this->app->environment() !== 'production') {
+		$this->app->register('D4nd3v\Crud\CrudServiceProvider');
+	}
 }
 ```
 
