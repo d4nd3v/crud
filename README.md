@@ -48,4 +48,50 @@ The generated files are:
 - \+ added route resource in routes/web.php
 
 
+####For User Roles (or any other filter)####
+
+in ```UsersController.php````
+```
+	$orderBy = $request->input('by', 'id');
+	....
+		$roles = array();
+		if (class_exists(Role::class)) {
+			$roles = Role::get();
+		}
+		if(!empty(request()->input('role'))) {
+			$items = User::role(request()->input('role'))->orderBy($orderBy, $order)->paginate(20);
+		} else {
+			$items = User::orderBy($orderBy, $order)->paginate(20);
+		}
+		
+        return view('users.index')
+            ->withItems($items)
+            ->withPage($request->input('page', 1))
+            ->withOrder($order)
+            ->withOrderBy($orderBy)
+            ->withRoles($roles);
+```
+
+
+in ```index.blade.php``` 
+```
+	@section('content')
+	.....
+	@if($roles)
+		<a href="?role=">all</a>
+		@foreach($roles as $role)
+			&nbsp; <a href="?role={{ $role->name }}"
+					  @if(request()->input('role')==$role->name) class="active" @endif
+			>{{ $role->name }}</a>
+		@endforeach
+		<hr>
+	@endif
+```
+
+
+
+
+
+
+
 
