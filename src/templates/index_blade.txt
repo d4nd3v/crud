@@ -42,7 +42,7 @@ $MASTER_LAYOUT$
 
 
 
-    <div class="table-responsive">
+    <div class="table-responsive" style="{{ $items->total() == 0 ? 'display:none;' : "" }}">
     <table class="table table-bordered table-hover" style="width: auto !important;">
         <thead>
             <tr>
