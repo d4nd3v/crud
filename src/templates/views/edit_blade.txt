@@ -20,6 +20,9 @@ $MASTER_LAYOUT$
               </button>
               &nbsp; {{ Session::get('flash_message') }}
             </div>
+            <script>
+                parent.refreshPageOnModalClose = true;
+            </script>
         @endif
 
 

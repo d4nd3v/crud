@@ -18,14 +18,23 @@ class $NAME$ extends Controller
     ];
 
 
-    public function index($IF_HAS_PARENT$$parentId, $END_HAS_PARENT$Request $request)
+    public function index()
     {
-        $order = $request->input('order', 'desc');
-        $orderBy = $request->input('by', '$PRIMARY_KEY$');
-        $items = $MODEL$::orderBy($orderBy, $order)->paginate(20);
+        // $IF_HAS_PARENT$$parentId$END_HAS_PARENT$
+
+        $order = request()->input('order', 'desc');
+        $orderBy = request()->input('by', '$PRIMARY_KEY$');
+
+        $items = $MODEL$::orderBy($orderBy, $order)
+            ->where(array_filter(request()->input('filter',[])))
+            ->paginate(20);
+
+        if(request()->expectsJson()) {
+            return $items->toArray();
+        }
         return view('$VIEW_FOLDER$.index')
             ->withItems($items)
-            ->withPage($request->input('page', 1))
+            ->withPage(request()->input('page', 1))
             ->withOrder($order)
             ->withOrderBy($orderBy)$IF_HAS_PARENT$
             ->withParent($parentId)$END_HAS_PARENT$;
@@ -38,19 +47,19 @@ class $NAME$ extends Controller
     }
 
 
-    public function store($IF_HAS_PARENT$$parentId, $END_HAS_PARENT$Request $request)
+    public function store($IF_HAS_PARENT$$parentId$END_HAS_PARENT$)
     {
-        $validator = Validator::make($request->all(), $this->validation);
+        $validator = Validator::make(request()->all(), $this->validation);
         if ($validator->fails()) {
             // $errorMessages = $validator->errors()->all();
-            if ($request->expectsJson()) {
+            if (request()->expectsJson()) {
                 //
             } else {
-                return redirect()->back()->withInput($request->input())->withErrors($validator->errors());
+                return redirect()->back()->withInput(request()->input())->withErrors($validator->errors());
             }
         }
 
-        $input = $request->all();
+        $input = request()->all();
 
         // insert empty as null
 $SET_EMPTY_AS_NULL$
@@ -61,7 +70,7 @@ $SET_EMPTY_AS_NULL$
             $item->fill($input)->save();
         }
         catch(QueryException $e){
-            return redirect()->back()->withInput($request->input())->withErrors($e->getMessage());
+            return redirect()->back()->withInput(request()->input())->withErrors($e->getMessage());
         }
 
         // Session::flash('flash_message', 'Item successfully added!');
@@ -86,22 +95,22 @@ $SET_EMPTY_AS_NULL$
     }
 
 
-    public function update($IF_HAS_PARENT$$parentId, $END_HAS_PARENT$$id, Request $request)
+    public function update($IF_HAS_PARENT$$parentId, $END_HAS_PARENT$$id)
     {
 
         $item = $MODEL$::findOrFail($id);
 
-        $validator = Validator::make($request->all(), $this->validation);
+        $validator = Validator::make(request()->all(), $this->validation);
         if ($validator->fails()) {
             // $errorMessages = $validator->errors()->all();
-            if ($request->expectsJson()) {
+            if (request()->expectsJson()) {
                 //
             } else {
-                return view('$VIEW_FOLDER$.edit')->withItem($item)->withInput($request->input())->withErrors($validator->errors());
+                return view('$VIEW_FOLDER$.edit')->withItem($item)->withInput(request()->input())->withErrors($validator->errors());
             }
         }
 
-        $input = $request->all();
+        $input = request()->all();
 
         // insert empty as null
 $SET_EMPTY_AS_NULL$
@@ -111,8 +120,14 @@ $SET_EMPTY_AS_NULL$
             $item->fill($input)->save();
         }
         catch(QueryException $e){
-            return view('$VIEW_FOLDER$.edit')->withItem($item)->withInput($request->input())->withErrors($e->getMessage());
+            return view('$VIEW_FOLDER$.edit')->withItem($item)->withInput(request()->input())->withErrors($e->getMessage());
         }
+
+
+        // save many to many
+        $item->tags()->sync(request()->input('tags', []));
+
+
         // Session::flash('flash_message', 'Item successfully edited!');
         Session::flash('highlight', $id);
         // return redirect()->route('$VIEW_FOLDER$.index'$IF_HAS_PARENT$, [$parentId]$END_HAS_PARENT$);

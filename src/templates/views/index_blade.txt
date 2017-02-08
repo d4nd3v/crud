@@ -38,9 +38,7 @@ $MASTER_LAYOUT$
         @endforeach
     @endif
 
-
-
-
+$SELECT_FROM_PARENT$
 
     <div class="table-responsive" style="{{ $items->total() == 0 ? 'display:none;' : "" }}">
     <table class="table table-bordered table-hover" style="width: auto !important;">
@@ -48,6 +46,7 @@ $MASTER_LAYOUT$
             <tr>
 $TABLE_HEADER$
             $CHILD_LINK_HEADER$
+            $MANYTO_LINK_HEADER$
             $START_COMMENT_DELETE$<th>&nbsp;</th>$END_COMMENT_DELETE$
             $START_COMMENT_UPDATE$<th>&nbsp;</th>$END_COMMENT_UPDATE$
             <th>&nbsp;</th>
@@ -67,6 +66,7 @@ $TABLE_HEADER$
 $TABLE$
 
                 $CHILD_LINK$
+                $MANYTO_LINK$
 
                 $START_COMMENT_DELETE$
                 <td width="1">
