@@ -46,6 +46,8 @@ $MASTER_LAYOUT$
 
 
 
+
+
         <table style="width: auto;"class="table table-bordered">
 $FORM$
 

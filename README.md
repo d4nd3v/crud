@@ -34,13 +34,20 @@ Run `php artisan generate:crud TABLE_NAME` from the console.
 |--parent_of=TABLE1,TABLE2,TABLE3  | add links & "belongs to" in model   |
 |--child_of=TABLE4,TABLE5,TABLE6   | generates links to parent |
 |--many_with=TABLE1,TABLE2         | many to many relation |
+|--upload=field1,field2            | transformed to file upload fields |
 
+#### Options examples
+##### `--crud=RD` => all actions without C-reate and U-pdate
 
---many_with => in model: $this->belongsToMany
+##### `--many_with` adds:
+- in model: `...$this->belongsToMany...`
+- in controller: `...->sync(request()->input(....`
+- in index view: `...list from MNY_TBL...`
+- in create and edit view: `...js select2 MNY_TBL...`
+
 
 
   
-exemple: --crud=CRU (all actions without delete)  
 
 ## Notes
 If you need pagination don't forget to run:  

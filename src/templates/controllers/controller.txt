@@ -51,47 +51,50 @@ class $NAME$ extends Controller
     {
         $validator = Validator::make(request()->all(), $this->validation);
         if ($validator->fails()) {
-            // $errorMessages = $validator->errors()->all();
             if (request()->expectsJson()) {
-                //
+                // $errorMessages = $validator->errors()->all();
             } else {
                 return redirect()->back()->withInput(request()->input())->withErrors($validator->errors());
             }
         }
 
         $input = request()->all();
+        $item = new $MODEL$;
+        $item->fill($input);
+
+$FILE_UPLOAD$
 
         // insert empty as null
 $SET_EMPTY_AS_NULL$
 
-        $item = new $MODEL$;
+
 
         try{
-            $item->fill($input)->save();
+            $item->save();
         }
         catch(QueryException $e){
             return redirect()->back()->withInput(request()->input())->withErrors($e->getMessage());
         }
 
-        // Session::flash('flash_message', 'Item successfully added!');
-        // return redirect()->route('$VIEW_FOLDER$.index'$IF_HAS_PARENT$, [$parentId]$END_HAS_PARENT$); // go to index
-        // go to edit
-        return view('$VIEW_FOLDER$.edit')->withItem($item)$IF_HAS_PARENT$->withParent($parentId)$END_HAS_PARENT$->withSuccess('Item successfully added!');
+        $SET_MANY_TO_MANY$
 
+        // in modal, after insert redirect to edit form
+        Session::flash('flash_message', 'Item successfully added!');
+        return redirect()->route('$VIEW_FOLDER$.edit', [$item->id]);
+
+        // return redirect()->route('$VIEW_FOLDER$.index'$IF_HAS_PARENT$, [$parentId]$END_HAS_PARENT$); // go to index
     }
 
 
     public function show($id)
     {
-        $item = $MODEL$::findOrFail($id);
-        return view('$VIEW_FOLDER$.view')->withItem($item)$IF_HAS_PARENT$->withParent($parentId)$END_HAS_PARENT$;
+        return view('$VIEW_FOLDER$.view')->withItem($MODEL$::findOrFail($id))$IF_HAS_PARENT$->withParent($parentId)$END_HAS_PARENT$;
     }
 
 
     public function edit($IF_HAS_PARENT$$parentId, $END_HAS_PARENT$$id)
     {
-        $item = $MODEL$::findOrFail($id);
-        return view('$VIEW_FOLDER$.edit')->withItem($item)$IF_HAS_PARENT$->withParent($parentId)$END_HAS_PARENT$;
+        return view('$VIEW_FOLDER$.edit')->withItem($MODEL$::findOrFail($id))$IF_HAS_PARENT$->withParent($parentId)$END_HAS_PARENT$;
     }
 
 
@@ -102,43 +105,47 @@ $SET_EMPTY_AS_NULL$
 
         $validator = Validator::make(request()->all(), $this->validation);
         if ($validator->fails()) {
-            // $errorMessages = $validator->errors()->all();
             if (request()->expectsJson()) {
-                //
+                // $errorMessages = $validator->errors()->all();
             } else {
-                return view('$VIEW_FOLDER$.edit')->withItem($item)->withInput(request()->input())->withErrors($validator->errors());
+                return redirect()->back()->withInput(request()->input())->withErrors($validator->errors());
             }
         }
 
         $input = request()->all();
+        $item->fill($input);
+
+$FILE_UPLOAD$
 
         // insert empty as null
 $SET_EMPTY_AS_NULL$
 
 
+
         try{
-            $item->fill($input)->save();
+            $item->save();
         }
         catch(QueryException $e){
-            return view('$VIEW_FOLDER$.edit')->withItem($item)->withInput(request()->input())->withErrors($e->getMessage());
+            return redirect()->back()->withInput(request()->input())->withErrors($e->getMessage());
         }
 
-
-        // save many to many
-        $item->tags()->sync(request()->input('tags', []));
-
+        $SET_MANY_TO_MANY$
 
         // Session::flash('flash_message', 'Item successfully edited!');
         Session::flash('highlight', $id);
         // return redirect()->route('$VIEW_FOLDER$.index'$IF_HAS_PARENT$, [$parentId]$END_HAS_PARENT$);
-        // stay in the same form
-        return view('$VIEW_FOLDER$.edit')->withItem($item)$IF_HAS_PARENT$->withParent($parentId)$END_HAS_PARENT$->withSuccess('Item successfully edited!');
+
+        Session::flash('flash_message', 'Item successfully edited!');
+        return redirect()->back()->withItem($item);
+
+
     }
 
 
     public function destroy($IF_HAS_PARENT$$parentId, $END_HAS_PARENT$$id)
     {
         $item = $MODEL$::findOrFail($id);
+        $ON_DESTROY_DELETE_FILES$
         $item->delete();
         Session::flash('flash_message', 'Item successfully deleted!');
         return redirect()->route('$VIEW_FOLDER$.index'$IF_HAS_PARENT$, [$parentId]$END_HAS_PARENT$);

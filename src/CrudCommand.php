@@ -13,7 +13,7 @@ class CrudCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'generate:crud {table} {--model_only=false} {--child_of=} {--parent_of=} {--many_with=} {--overwrite=false} {--crud=CRUD}';
+    protected $signature = 'generate:crud {table} {--model_only=false} {--child_of=} {--parent_of=} {--many_with=} {--overwrite=false} {--crud=CRUD} {--upload=}';
 
     /**
      * The console command description.
@@ -46,6 +46,11 @@ class CrudCommand extends Command
     private $schema = array();
 
 
+
+    private $upload = null;
+    private $manyWith = null;
+
+
     public function handle()
     {
         $tableName = $this->argument('table');
@@ -53,6 +58,8 @@ class CrudCommand extends Command
         $parentOf = $this->option('parent_of'); // table_1.fk1,table_2.fk2,table_3.fk3
         $childOf = $this->option('child_of'); // TABLE
         $manyWith = $this->option('many_with');
+        $this->manyWith = $this->option('many_with');
+        $this->upload = $this->option('upload', null);
 
 
         $crud = strtolower($this->option('crud'));
@@ -106,8 +113,11 @@ class CrudCommand extends Command
 
     public function createLayouts()
     {
-        $destionationFolder = resource_path('views/layouts');
-        $this->createFileFromTemplate($this->templatePath . '/simple_layout.txt', $destionationFolder . '/simple.blade.php');
+        $destionationPath= resource_path('views/layouts/simple.blade.php');
+        if(! \File::exists($destionationPath)) {
+            $this->createFileFromTemplate($this->templatePath . '/simple_layout.txt', $destionationPath);
+        }
+
     }
 
 
@@ -154,6 +164,8 @@ class CrudCommand extends Command
             $createViewTemplate = str_replace('$MASTER_LAYOUT$', '@extends(\''.$masterLayout.'\')', $createViewTemplate);
         }
 
+        $createViewTemplate = $this->applyAllViewsTemplateSetup($createViewTemplate);
+
         if(!\File::exists($viewCreatePath) || $this->overwriteExistingFiles) {
             \File::put($viewCreatePath, $createViewTemplate);
         }
@@ -165,8 +177,8 @@ class CrudCommand extends Command
         $pk = $this->getPrimaryKey($dbFields);
         $editViewTemplate = \File::get(($this->templatePath . 'views/edit_blade.txt'));
         $viewEditPath = $viewsPath. '/edit.blade.php';
-        $newRoutePath = $this->getRouteResourceName($tableName);
-        $editViewTemplate = str_replace('$ROUTE$', $newRoutePath, $editViewTemplate);
+
+        $editViewTemplate = str_replace('$ROUTE$', $this->getRouteResourceName($tableName), $editViewTemplate);
         $editViewTemplate = str_replace('$FORM$', $this->getViewForms($dbFields, $childOf, $manyWith, true), $editViewTemplate);
         $editViewTemplate = $this->showHideParentInTemplate($editViewTemplate, $tableIsChild);
         $editViewTemplate = str_replace('$PRIMARY_KEY$', $pk, $editViewTemplate);
@@ -175,6 +187,8 @@ class CrudCommand extends Command
         if($masterLayout!="") {
             $editViewTemplate = str_replace('$MASTER_LAYOUT$', '@extends(\''.$masterLayout.'\')', $editViewTemplate);
         }
+
+        $editViewTemplate = $this->applyAllViewsTemplateSetup($editViewTemplate);
 
         if(!\File::exists($viewEditPath) || $this->overwriteExistingFiles) {
             \File::put($viewEditPath, $editViewTemplate);
@@ -186,8 +200,8 @@ class CrudCommand extends Command
         $pk = $this->getPrimaryKey($dbFields);
         $editViewTemplate = \File::get(($this->templatePath . 'views/view_blade.txt'));
         $viewEditPath = $viewsPath. '/view.blade.php';
-        $newRoutePath = $this->getRouteResourceName($tableName);
-        $editViewTemplate = str_replace('$ROUTE$', $newRoutePath, $editViewTemplate);
+
+        $editViewTemplate = str_replace('$ROUTE$', $this->getRouteResourceName($tableName), $editViewTemplate);
         $editViewTemplate = str_replace('$FORM$', $this->getViewShowContent($dbFields, true), $editViewTemplate);
         $editViewTemplate = $this->showHideParentInTemplate($editViewTemplate, $tableIsChild);
         $editViewTemplate = str_replace('$PRIMARY_KEY$', $pk, $editViewTemplate);
@@ -201,6 +215,24 @@ class CrudCommand extends Command
             \File::put($viewEditPath, $editViewTemplate);
         }
     }
+
+
+    public function applyAllViewsTemplateSetup($template)
+    {
+
+        if (!empty($this->upload)) { // DISABLED
+            // remove markes, let multipart encrypt
+            $template = str_replace('$IF_FILE_UPLOAD$', "", $template);
+            $template = str_replace('$END_IF_FILE_UPLOAD$', "", $template);
+        } else {
+            // remove markers and text
+            $template = preg_replace('~\$IF_FILE_UPLOAD\$.*?\$END_IF_FILE_UPLOAD\$~', '', $template);
+        }
+
+        return $template;
+    }
+
+
 
 
     public function getPK($table)
@@ -398,6 +430,15 @@ class CrudCommand extends Command
         foreach ($dbFields as $c) {
             $fieldName = $c->Field;
             if($fieldName!=$pk && $fieldName!="created_at" && $fieldName!="updated_at" && $fieldName!="deleted_at") {
+
+                $isFileUpload = false;
+                if (!is_null($this->upload)) {
+                    if (in_array($c->Field, explode(',', $this->upload))) {
+                        $isFileUpload = true;
+                    }
+                }
+
+
                 $fieldRules = array();
                 if($c->Null=="NO" && is_null($c->Default)) {
                     if(!$this->columnIsString($c)) {
@@ -410,7 +451,7 @@ class CrudCommand extends Command
                     $size = str_replace(')','',$typeParts[1]);
                 }
                 $fieldType = $typeParts[0];
-                if($fieldType=="varchar") {
+                if($fieldType=="varchar" && !$isFileUpload) {
                     $fieldRules[] = "max:".$size;
                 }
                 if($fieldType=="tinyint" || $fieldType=="int" || $fieldType=="smallint" || $fieldType=="mediumint" || $fieldType=="bigint") {
@@ -419,6 +460,11 @@ class CrudCommand extends Command
                 if($fieldType=="date" || $fieldType=="datetime" || $fieldType=="timestamp") {
                     $fieldRules[] = "date";
                 }
+
+                if ($isFileUpload) {
+                    $fieldRules[] = "image|mimes:jpeg,jpg|max:1024";
+                }
+
                 $v .= PHP_EOL . "        '" . $fieldName . "'" . ' => ' . '"'.(implode('|',$fieldRules)).'",';
             }
         }
@@ -515,6 +561,18 @@ class CrudCommand extends Command
                 }
 
 
+
+
+                $isFileUpload = false;
+                if (!is_null($this->upload)) {
+                    if (in_array($column->Field, explode(',', $this->upload))) {
+                        $isFileUpload = true;
+                    }
+                }
+
+
+
+
                 if($isFK) {
 
                     $showParentField = "id";
@@ -529,15 +587,16 @@ class CrudCommand extends Command
                     }
 
 
+                    $c = '@if(isset($item->' . $parentField . '->' . $showParentField . ')) {{ $item->' . $parentField . '->' . $showParentField . ' }} @endif';
 
 
-
-                    $c = '@if(isset($item->' . $parentField . '->'.$showParentField.')) {{ $item->' . $parentField . '->'.$showParentField.' }} @endif';
-
-
-
-
-
+                } else if($isFileUpload) {
+                    $c = '
+                    @if(isset($item->' . $column->Field . '))
+                        <a href="/UPLOAD_FOLDER/{{ $item->' . $column->Field . ' }}" target="_blank">
+                            <img src="/UPLOAD_FOLDER/{{ $item->' . $column->Field . ' }}" width="100px">
+                        </a>
+                    @endif';
 
 
                 } else if($column->Field=="created_at" || $column->Field=="updated_at") {
@@ -739,28 +798,26 @@ class CrudCommand extends Command
             if($fieldName!="created_at" && $fieldName!="updated_at" && $fieldName!="deleted_at" && $fieldName!=$pk
                     && $type!="varbinary" && $type!="binary") {
 
-                $f .= str_repeat(" ", 3*4).'<tr>'.PHP_EOL;
+                $f .= str_repeat(" ", 3 * 4) . '<tr>' . PHP_EOL;
                 // TD name
-                $f .= str_repeat(" ", 4*4) . '<td>' . PHP_EOL;
-                $f .= str_repeat(" ", 5*4) . $formatedColumnName . PHP_EOL;
+                $f .= str_repeat(" ", 4 * 4) . '<td>' . PHP_EOL;
+                $f .= str_repeat(" ", 5 * 4) . $formatedColumnName . PHP_EOL;
 
 
-
-                $f .= str_repeat(" ", 4*4) . '</td>' . PHP_EOL;
+                $f .= str_repeat(" ", 4 * 4) . '</td>' . PHP_EOL;
 
                 // TD input
-                $f .= str_repeat(" ", 4*4).'<td>'.PHP_EOL;
+                $f .= str_repeat(" ", 4 * 4) . '<td>' . PHP_EOL;
 
 
-
-                if($editForm) {
-                    $value = '{{ old(\''.$fieldName.'\')?old(\''.$fieldName.'\'):$item->'.$fieldName.' }}';
+                if ($editForm) {
+                    $value = '{{ $errors->any() ? old(\'' . $fieldName . '\') : $item->' . $fieldName . ' }}';
                 } else {
-                    $value = '{{ old(\''.$fieldName.'\') }}';
+                    $value = '{{ old(\'' . $fieldName . '\') }}';
                 }
 
                 $inputSize = "300"; // default
-                if($this->columnIsNumeric($c)) {
+                if ($this->columnIsNumeric($c)) {
                     $inputSize = "150";
                 } else if ($this->columnIsDate($c)) {
                     $inputSize = "150";
@@ -768,23 +825,22 @@ class CrudCommand extends Command
 
 
                 $htmlChecked = '';
-                if($editForm) {
-                    $htmlChecked .= '{{ $item->'.$fieldName.'?"checked":"" }}';
+                if ($editForm) {
+                    $htmlChecked .= '{{ $item->' . $fieldName . '?"checked":"" }}';
                 }
 
-                $htmlChecked .= '{{ old("'.$fieldName.'") ? "checked" : "" }}';
+                $htmlChecked .= '{{ old("' . $fieldName . '") ? "checked" : "" }}';
 
 
+                $isFileUpload = false;
+                if (!is_null($this->upload)) {
+                    if (in_array($c->Field, explode(',', $this->upload))) {
+                        $isFileUpload = true;
+                    }
+                }
 
 
-
-
-
-
-
-
-
-                if($isFK) {
+                if ($isFK) {
 
                     $showParentField = "id";
                     // try to guess name of the "name" field
@@ -798,17 +854,17 @@ class CrudCommand extends Command
                     }
 
 
-                    if($editForm) {
+                    if ($editForm) {
                         // edit item form
                         $formElement = '
-                            <select name="'. $c->Field .'" class="form-control">
+                            <select name="' . $c->Field . '" class="form-control">
                                 <option value="">---</option>
                                 @foreach(\App\Models\\' . $this->getModelName($parentTable) . '::get() as $parentItem)
                                     <option value="{{ $parentItem->id }}"
-                                            @if(old("'. $c->Field .'") == $parentItem->id)
+                                            @if(old("' . $c->Field . '") == $parentItem->id)
                                                 selected
                                                 
-                                            @elseif(!$errors->any() && $parentItem->id==$item->'.$c->Field.')
+                                            @elseif(!$errors->any() && $parentItem->id==$item->' . $c->Field . ')
                                                 selected
                                                 
                                             @endif>
@@ -823,11 +879,11 @@ class CrudCommand extends Command
                         // add item form
 
                         $formElement = '
-                             <select name="'. $c->Field .'" class="form-control">
+                             <select name="' . $c->Field . '" class="form-control">
                                 <option value="">---</option>
                                 @foreach(\App\Models\\' . $this->getModelName($parentTable) . '::get() as $parentItem)
                                     <option value="{{ $parentItem->id }}"
-                                            @if(old("'. $c->Field .'") == $parentItem->id)
+                                            @if(old("' . $c->Field . '") == $parentItem->id)
                                                 selected
                                             @endif>
                                         {{ $parentItem->name }}
@@ -838,10 +894,17 @@ class CrudCommand extends Command
                     }
 
 
+                } else if ($isFileUpload) {
 
+                    $formElement  = "";
 
+                    if ($editForm) {
 
+                        $formElement .=  '<a href="/UPLOAD_FOLDER/{{ $item->' . $fieldName . ' }}" target="_blank">{{ $item->' . $fieldName . ' }}</a>'
+                            . '<br>'. PHP_EOL . str_repeat(" ", 6*4);
+                    }
 
+                    $formElement .= '<input type="file" class="form-control input-sm" name="' . $fieldName . '">';
 
 
                 } else if($type=="text") {
@@ -896,12 +959,29 @@ class CrudCommand extends Command
                 }
 
 
+
                 $f .= '
                 
                         <select name="'.$mw.'[]" id="select_'.$mw.'" style="width:600px"
                                 class="form-control js-example-basic-multiple" multiple="multiple">
                             @foreach(\App\Models\\'.$this->getModelName($mw).'::get() as $itemOfMany)
-                                <option value="{{ $itemOfMany->id }}">{{ $itemOfMany->name }}</option>
+                                <option
+                                        @if($errors->any())
+                                            @if(in_array($itemOfMany->id, old(\''.$mw.'\',[]))) selected @endif';
+
+                if ($editForm) {
+                    $f .= '
+                                @else
+                                    @foreach($item->' . $mw . '()->get() as $x)
+                                        @if($x->id==$itemOfMany->id)
+                                            selected
+                                        @endif
+                                    @endforeach';
+                }
+
+                $f .= ' 
+                                        @endif
+                                        value="{{ $itemOfMany->id }}">{{ $itemOfMany->name }}</option>
                             @endforeach
                         </select>
                        
@@ -987,15 +1067,12 @@ class CrudCommand extends Command
         $routes = "";
 
 
-        $routePath = base_path('routes/web.php');
-        \File::append($routePath, PHP_EOL.PHP_EOL.$routes.PHP_EOL.PHP_EOL);
-
 
 
         $tableIsChild = !empty($childOf);
 
         $routePath = base_path('routes/web.php');
-        if(! \File::exists($routePath)) {
+        if(! \File::exists($routePath) && false) { // DISABLED
             $this->error("Route file ".$routePath." not found.");
         } else {
             // create routes
@@ -1069,7 +1146,7 @@ class CrudCommand extends Command
 
             if(true) { // DISABLED
                 // $this->warn(PHP_EOL . "Route path '". $newRoutePath. "' already exists, please add to your route: ");
-                $this->warn(PHP_EOL . "Please add to your route:");
+                $this->warn(PHP_EOL . "Please add to your routes:");
                 $this->warn("---------------------------------------------------------------------");
                 $this->warn($routeText);
                 $this->warn("---------------------------------------------------------------------");
@@ -1122,12 +1199,77 @@ class CrudCommand extends Command
         $controllerTemplate = str_replace('$PRIMARY_KEY$', $pk, $controllerTemplate);
 
 
+
+
+        $fileUpload = "";
+
+        if(!is_null($this->upload)) {
+            foreach (explode(',', $this->upload) as $fu) {
+                $fileUpload .= '
+        if (request()->hasFile("'.$fu.'")) {
+            if (request()->file("'.$fu.'")->isValid()) {
+                $item->'.$fu.' = md5(uniqid(rand(), true)) . "." . request()->file("'.$fu.'")->getClientOriginalExtension();
+                request()->file("'.$fu.'")->move(public_path() . "/UPLOAD_FOLDER/", $item->'.$fu.');
+            } else {    
+                return redirect()->back()->withInput(request()->input())->withErrors("Uploaded file is not valid.");
+            }
+        }';
+            }
+        }
+
+
+
+        $controllerTemplate = str_replace('$FILE_UPLOAD$', $fileUpload,  $controllerTemplate);
+
+
+
+
+
         $setEmptyAsNull = "";
         $nullFields =  $this->getNullOrDefaultColumns($dbFields);
         foreach($nullFields as $nullField) {
             $setEmptyAsNull .= '        $input[\''. $nullField .'\'] = $input[\''. $nullField .'\']=="" ? null : $input[\''. $nullField .'\'];' . PHP_EOL;
         }
         $controllerTemplate = str_replace('$SET_EMPTY_AS_NULL$', $setEmptyAsNull, $controllerTemplate);
+
+
+
+
+
+        // file upload --- ON_DESTROY_DELETE_FILES
+        $onDestroyDeleteFiles = "";
+        if(isset($this->upload)) {
+            foreach(explode(',', $this->upload)as $fu) {
+                $onDestroyDeleteFiles .= '
+        if(\File::exists(public_path() . "/UPLOAD_FOLDER/" . $item->' . trim($fu).') && !empty($item->' . trim($fu).')) {
+            unlink(public_path() . "/UPLOAD_FOLDER/" . $item->' . trim($fu).');
+        }'.PHP_EOL;
+            }
+        }
+        $controllerTemplate = str_replace('$ON_DESTROY_DELETE_FILES$', $onDestroyDeleteFiles, $controllerTemplate);
+
+
+
+
+
+
+        // $SET_MANY_TO_MANY$
+        $setManyToMany = "";
+
+        if(isset($this->manyWith)) {
+            $setManyToMany = "// save many to many";
+            foreach(explode(',', $this->manyWith) as $mw) {
+                $setManyToMany .= '
+        $item->'.trim($mw).'()->sync(request()->input(\''.trim($mw).'\', []));
+                ';
+            }
+        }
+        $controllerTemplate = str_replace('$SET_MANY_TO_MANY$', $setManyToMany, $controllerTemplate);
+
+
+
+
+
 
 
 
@@ -1164,7 +1306,17 @@ class CrudCommand extends Command
         $pk = $this->getPrimaryKey($dbFields);
         foreach ($dbFields as $fld) {
             $fieldName = $fld->Field;
-            if ($fieldName != $pk && $fieldName != "created_at" && $fieldName != "updated_at" && $fieldName != "deleted_at") {
+
+            // file upload fields are not set to empty (because of <input type="file"...)
+            $isFileUpload = false;
+            if (!is_null($this->upload)) {
+                if (in_array($fieldName, explode(',', $this->upload))) {
+                    $isFileUpload = true;
+                }
+            }
+
+
+            if ($fieldName != $pk && $fieldName != "created_at" && $fieldName != "updated_at" && $fieldName != "deleted_at" && !$isFileUpload) {
                 if ($fld->Null == "YES" || !is_null($fld->Default)) {
                     $nullColumns[] = $fieldName;
                 }
