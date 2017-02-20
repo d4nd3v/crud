@@ -341,15 +341,23 @@ class CrudCommand extends Command
         // add table filter before table
         // if this table has parents
 
-        // TODO
         $selectFromParentHtml = "";
         if(!empty($childOf)) {
             $childOfArray = explode(',', $childOf);
+
+            if(count($childOfArray)>0) {
+                $selectFromParentHtml .= '
+                <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.3/css/select2.min.css" rel="stylesheet" />
+                <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.3/js/select2.min.js"></script>';
+            }
+
+
+
             foreach ($childOfArray as $tbl) {
 
                 $selectFromParentHtml .= '
                 <form style="display:inline-block" class="form-inline" method="GET" action="{{ route(\'books.index\') }}">
-                    <select name="filter[author_id]" class="form-control" onchange="this.form.submit()">
+                    <select id="author_id" name="filter[author_id]" class="form-control" onchange="this.form.submit()">
                         <option value="">--- All Authors ---</option>
                         @foreach(\App\Models\Author::get() as $parentItem)
                             <option value="{{ $parentItem->id }}"
@@ -361,9 +369,36 @@ class CrudCommand extends Command
                         @endforeach
                     </select>
                 </form>
-                <br><br>';
+                <script type="text/javascript">
+                    $("#author_id").select2();
+                </script>';
 
             }
+
+
+            if(!empty($selectFromParentHtml)) {
+                $selectFromParentHtml .= '
+                @if (isset(request()->filter))
+                    @if (!empty(array_filter(request()->filter)))
+                        <a href="{{ route(\'books.index\') }}" class="btn btn-default">
+                            Reset
+                        </a>
+                    @endif
+                @endif
+                ';
+            }
+
+
+
+
+
+
+
+
+
+
+
+
         }
 
 
@@ -758,8 +793,6 @@ class CrudCommand extends Command
 
 
 
-
-
             $isFK = false;
             $parentField = "";
             $parentTable= "";
@@ -830,6 +863,7 @@ class CrudCommand extends Command
                 }
 
                 $htmlChecked .= '{{ old("' . $fieldName . '") ? "checked" : "" }}';
+
 
 
                 $isFileUpload = false;
@@ -910,7 +944,13 @@ class CrudCommand extends Command
                 } else if($type=="text") {
 
 
+                    // $f .= is_null($c->Default) ? "null" :  $c->Default;
+
+
+
                     $formElement = '<textarea style="width: 600px" rows="5" class="form-control input-sm" name="' . $fieldName . '">' . $value . '</textarea>';
+
+
                 } else if($this->columnIsBool($c)) {
                     $formElement = '<input type="hidden" value="0" name="' . $fieldName . '">';
                     $formElement .= PHP_EOL . str_repeat(" ", 6*4) . '<input type="checkbox" class="form-control input-sm" '.$htmlChecked.' name="' . $fieldName . '" value="1">';
@@ -924,6 +964,7 @@ class CrudCommand extends Command
                 $f .= str_repeat(" ", 5*4).'<div' . $highlightValidationError . '>
                         '.$formElement.'
                     </div>'.PHP_EOL;
+
 
 
 
