@@ -57,7 +57,10 @@ $TABLE_HEADER$
             {{ $highlightClass = ""}}
             @if (Session::has('highlight'))
                 @if (Session::get('highlight') == $item->id)
-                   <!-- {{ $highlightClass = "info" }} -->
+                    <!--
+                        {{ $highlightClass = "info" }}
+                        {{ request()->session()->forget('highlight') }}
+                    -->
                 @endif
             @endif
 

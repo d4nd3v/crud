@@ -78,6 +78,8 @@ $SET_EMPTY_AS_NULL$
 
         $SET_MANY_TO_MANY$
 
+        request()->session()->put('highlight', $item->id);
+
         // in modal, after insert redirect to edit form
         Session::flash('flash_message', 'Item successfully added!');
         return redirect()->route('$VIEW_FOLDER$.edit', [$item->id]);
@@ -132,7 +134,7 @@ $SET_EMPTY_AS_NULL$
         $SET_MANY_TO_MANY$
 
         // Session::flash('flash_message', 'Item successfully edited!');
-        Session::flash('highlight', $id);
+        request()->session()->put('highlight', $item->id);
         // return redirect()->route('$VIEW_FOLDER$.index'$IF_HAS_PARENT$, [$parentId]$END_HAS_PARENT$);
 
         Session::flash('flash_message', 'Item successfully edited!');
