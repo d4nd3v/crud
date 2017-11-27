@@ -137,7 +137,7 @@ class CrudCommand extends Command
     public function createViews($tableName, $dbFields, $tableIsChild, $childOf, $parentOf, $manyWith, $crud)
     {
         // create view folder
-        $viewsPath = resource_path('views') .'/admin/'. $this->getViewFolder($tableName);
+        $viewsPath = resource_path('views') .'/admin/'. $this->getViewFolderName($tableName);
         if(!\File::exists($viewsPath)) {
             \File::makeDirectory($viewsPath, 0755, true);
         }
@@ -1391,6 +1391,10 @@ class CrudCommand extends Command
     private function getViewFolder($tableName)
     {
         return 'admin.'.$tableName.'-crud';
+    }
+    private function getViewFolderName($tableName)
+    {
+        return $tableName.'-crud';
     }
 
 
