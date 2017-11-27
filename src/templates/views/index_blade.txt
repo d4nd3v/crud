@@ -16,13 +16,13 @@
 
     <br><br>
 
-    @if(Session::has('flash_message'))
+    @if(session()->has('flash_message'))
         <div class="alert alert-success alert-dismissible" style="display: inline-block" role="alert">
             <span class="glyphicon glyphicon-ok" aria-hidden="true"></span>
             <button type="button" class="close" data-dismiss="alert" aria-label="Close">
                 <span aria-hidden="true">&times;</span>
             </button>
-            &nbsp; {{ Session::get('flash_message') }}
+            &nbsp; {{ session()->get('flash_message') }}
         </div>
         <br clear="all">
     @endif
@@ -57,8 +57,8 @@ $TABLE_HEADER$
         @foreach($items as $item)
 
             {{ $highlightClass = ""}}
-            @if (Session::has('highlight'))
-                @if (Session::get('highlight') == $item->id)
+            @if (session()->has('highlight'))
+                @if (session()->get('highlight') == $item->id)
                     <!--
                         {{ $highlightClass = "info" }}
                         {{ request()->session()->forget('highlight') }}
@@ -78,7 +78,7 @@ $TABLE$
                         {{ csrf_field() }}
                        <input name="_method" type="hidden" value="DELETE">
                        <button onclick="return confirm('Are you sure?')"  type="submit" class="btn btn-link btn-xs">
-                           <span class="glyphicon glyphicon-remove"></span>
+                           <span class="fa fa-remove"></span>
                        </button>
                    </form>
                 </td>
@@ -86,14 +86,14 @@ $TABLE$
                 $START_COMMENT_UPDATE$
                 <td width="1">
                    <a onclick="modal('{{ route('$ROUTE$.edit', [$IF_HAS_PARENT$$parent, $END_HAS_PARENT$$item->$PRIMARY_KEY$]) }}')" href="javascript:void(0)" class="btn btn-link btn-xs">
-                       <span class="glyphicon glyphicon-edit"></span>
+                       {{--<span class="fa fa-edit"></span>--}}
                        Edit
                    </a>
                 </td>
                 $END_COMMENT_UPDATE$
                 <td width="1">
                    <a onclick="modal('{{ route('$ROUTE$.show', [$IF_HAS_PARENT$$parent, $END_HAS_PARENT$$item->$PRIMARY_KEY$]) }}')" href="javascript:void(0)" class="btn btn-link btn-xs">
-                       <span class="glyphicon glyphicon-view"></span>
+                       {{--<span class="fa fa-view"></span>--}}
                        View
                    </a>
                 </td>
@@ -130,7 +130,7 @@ $TABLE$
                     <iframe frameborder="0" scrolling="auto" height="100%" width="100%" src=""></iframe>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-default btn-sm" data-dismiss="modal">Close</button>
                 </div>
             </div>
         </div>

@@ -15,12 +15,12 @@
           action="{{  route('$ROUTE$.store'$IF_HAS_PARENT$, [$parent]$END_HAS_PARENT$) }}">
 
 
-        @if(Session::has('flash_message'))
+        @if(session()->has('flash_message'))
             <div class="alert alert-success alert-dismissible" role="alert">
               <button type="button" class="close" data-dismiss="alert" aria-label="Close">
                   <span aria-hidden="true">&times;</span>
               </button>
-              &nbsp; {{ Session::get('flash_message') }}
+              &nbsp; {{ session()->get('flash_message') }}
             </div>
             <br clear="all">
             <script>
@@ -45,14 +45,14 @@
 
         {{ csrf_field() }}
 
-        <table style="width: auto;"class="table table-bordered">
+        <table style="width: auto;" class="table table-inverse table-bordered table-sm table-responsive">
 $FORM$
             <tr>
                 <td>
                     &nbsp;
                 </td>
                 <td>
-                    <button type="submit" class="btn btn-primary btn-md">Save</button>
+                    <button type="submit" class="btn btn-primary btn-sm">Save</button>
                     {{--
                     <a href="{{ route('$ROUTE$.index', [$IF_HAS_PARENT$$parent$END_HAS_PARENT$]) }}" class="btn btn-default btn-sm pull-right">Cancel</a>
                     --}}
