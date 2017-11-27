@@ -1,7 +1,9 @@
-$MASTER_LAYOUT$
+@extends('layouts.admin',['hide_menu'=>false])
 
 @section('content')
 
+
+<div class="container" style="padding-top: 15px">
 
     $START_COMMENT_CREATE$
     <a onclick="modal('{{ route('$ROUTE$.create'$IF_HAS_PARENT$, [$parent]$END_HAS_PARENT$) }}')"
@@ -152,6 +154,8 @@ $TABLE$
         });
     </script>
 
+
+</div>
 
 @stop
 

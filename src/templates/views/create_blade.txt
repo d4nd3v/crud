@@ -1,6 +1,7 @@
-$MASTER_LAYOUT$
+@extends('layouts.admin',['hide_menu'=>true])
 
 @section('content')
+
 
 
 {{--
@@ -60,5 +61,8 @@ $FORM$
         </table>
 
     </form>
+
+
+
 
 @stop

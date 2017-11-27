@@ -3,6 +3,7 @@ $MASTER_LAYOUT$
 @section('content')
 
 
+
 {{--
     <span class="glyphicon glyphicon-menu-left"></span>
     <a href="{{ route('$ROUTE$.index'$IF_HAS_PARENT$, [$parent]$END_HAS_PARENT$) }}">Back to list</a>
