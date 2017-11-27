@@ -1390,7 +1390,7 @@ class CrudCommand extends Command
 
     private function getViewFolder($tableName)
     {
-        return $tableName.'-crud';
+        return 'admin.'.$tableName.'-crud';
     }
 
 
