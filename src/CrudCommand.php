@@ -113,10 +113,10 @@ class CrudCommand extends Command
 
     public function createLayouts()
     {
-        $destionationPath= resource_path('views/layouts/simple.blade.php');
-        if(! \File::exists($destionationPath)) {
-            $this->createFileFromTemplate($this->templatePath . '/simple_layout.txt', $destionationPath);
-        }
+        // $destionationPath= resource_path('views/layouts/simple.blade.php');
+        // if(! \File::exists($destionationPath)) {
+        //     $this->createFileFromTemplate($this->templatePath . '/simple_layout.txt', $destionationPath);
+        // }
 
     }
 
@@ -137,7 +137,7 @@ class CrudCommand extends Command
     public function createViews($tableName, $dbFields, $tableIsChild, $childOf, $parentOf, $manyWith, $crud)
     {
         // create view folder
-        $viewsPath = resource_path('views') .'/'. $this->getViewFolder($tableName);
+        $viewsPath = resource_path('views') .'/admin/'. $this->getViewFolder($tableName);
         if(!\File::exists($viewsPath)) {
             \File::makeDirectory($viewsPath, 0755, true);
         }
@@ -1318,7 +1318,7 @@ class CrudCommand extends Command
 
 
         // region  write generated model to disk
-        $controllerFolderPath = app_path('Http/Controllers/Crud');
+        $controllerFolderPath = app_path('Http/Controllers/Admin');
         $controllerPath = $controllerFolderPath . '/'.$controllerFileName;
 
         if(!\File::exists($controllerFolderPath)) {
@@ -1390,7 +1390,7 @@ class CrudCommand extends Command
 
     private function getViewFolder($tableName)
     {
-        return $tableName;
+        return $tableName.'-crud';
     }
 
 
