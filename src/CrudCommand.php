@@ -1121,7 +1121,7 @@ class CrudCommand extends Command
             if($tableIsChild && false) { // DISABLED
                 $newRoutePath = $childOf . '/{parentId}/'.$newRoutePath;
             }
-            $routeText = "Route::resource('" . $newRoutePath . "', 'Crud\\" . $this->getControllerName($tableName) . "', array('only' => array('index', 'create', 'store', 'edit', 'show', 'update', 'destroy')));";
+            $routeText = "Route::resource('" . $newRoutePath . "', 'Admin\\" . $this->getControllerName($tableName) . "', array('only' => array('index', 'create', 'store', 'edit', 'show', 'update', 'destroy')));";
 
 
             // DISABLED
@@ -1376,7 +1376,7 @@ class CrudCommand extends Command
 
     private function getControllerName($tableName)
     {
-        return ucwords((camel_case($tableName))) . 'Controller';
+        return 'Crud'.ucwords((camel_case($tableName))) . 'Controller';
     }
 
 
