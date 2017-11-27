@@ -545,11 +545,11 @@ class CrudCommand extends Command
                         . '
                     </a>'
                         . ' 
-                    @if($order_by==\'' . $column->Field . '\') 
+                    @if($orderBy==\'' . $column->Field . '\') 
                         @if($order==\'asc\') 
-                            <span class="glyphicon glyphicon-menu-up"></span> 
+                            <span class="fa fa-chevron-up"></span> 
                         @else 
-                            <span class="glyphicon glyphicon-menu-down"></span> 
+                            <span class="fa fa-chevron-down"></span> 
                         @endif 
                     @endif '
                         . '

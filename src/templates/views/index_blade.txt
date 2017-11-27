@@ -40,7 +40,7 @@ $MASTER_LAYOUT$
 $SELECT_FROM_PARENT$
 
     <div class="table-responsive" style="{{ $items->total() == 0 ? 'display:none;' : "" }}">
-    <table class="table table-bordered table-hover" style="width: auto !important;">
+    <table class="table table-striped table-inverse table-bordered table-hover table-sm table-responsive" style="width: auto !important;">
         <thead>
             <tr>
 $TABLE_HEADER$
@@ -108,7 +108,9 @@ $TABLE$
 
 
     @if ($items->lastPage() > 1)
-        {{ $items->appends(Request::except('page'))->links('vendor.pagination.default') }}
+        <div style="padding-top: 15px; display: inline-block;">
+            {{ $items->appends(request()->query())->links('vendor.pagination.bootstrap-4') }}
+        </div>
     @endif
 
 
