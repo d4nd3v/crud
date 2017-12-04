@@ -8,7 +8,7 @@
     $START_COMMENT_CREATE$
     <a onclick="modal('{{ route('$ROUTE$.create'$IF_HAS_PARENT$, [$parent]$END_HAS_PARENT$) }}')"
        href="javascript:void(0)" class="btn btn-primary btn-sm">
-        <span class="glyphicon glyphicon-plus"></span>
+        <span class="fa fa-plus-square"></span>
         Add
     </a> &nbsp;&nbsp;&nbsp;&nbsp;
     $END_COMMENT_CREATE$
